@@ -1,7 +1,6 @@
 package com.dachui.vpn.controller;
 
-import com.dachui.vpn.model.result.Result;
-import com.dachui.vpn.model.vo.PlaceOrderRequestVO;
+import com.dachui.vpn.common.Result;
 import com.dachui.vpn.service.VpnService;
 import org.springframework.web.bind.annotation.*;
 

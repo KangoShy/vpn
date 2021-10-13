@@ -1,4 +1,4 @@
-package com.dachui.vpn;
+package com.dachui.vpn.util;
 
 import org.springframework.util.CollectionUtils;
 

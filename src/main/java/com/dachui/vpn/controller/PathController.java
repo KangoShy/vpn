@@ -2,12 +2,10 @@ package com.dachui.vpn.controller;
 
 import com.dachui.vpn.model.po.OrderRecordsPO;
 import com.dachui.vpn.model.po.VpnComboPO;
-import com.dachui.vpn.model.result.Result;
 import com.dachui.vpn.model.vo.PlaceOrderRequestVO;
 import com.dachui.vpn.service.VpnService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -19,6 +17,11 @@ public class PathController {
 
     @Resource
     private VpnService vpnService;
+
+    @RequestMapping("/toLogin")
+    public String getZrbLyLogin(){
+        return "login";
+    }
 
     @RequestMapping("/toIndex")
     public String toIndex() {

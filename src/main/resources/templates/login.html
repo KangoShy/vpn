@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Sign In</title>
+    <meta name="keywords" content=""/>
+    <meta name="description" content=""/>
+
+    <link rel="stylesheet" type="text/css" href="../static/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../static/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="../static/fonts/iconic/css/material-design-iconic-font.min.css">
+    <link rel="stylesheet" type="text/css" href="../static/css/util.css">
+    <link rel="stylesheet" type="text/css" href="../static/css/main.css">
+</head>
+<style>
+
+    #snackbar {
+        visibility: hidden;
+        min-width: 250px;
+        margin-left: -125px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 5px;
+        padding: 10px;
+        position: fixed;
+        z-index: 1;
+        left: 50%;
+        bottom: 30px;
+        font-size: 15px;
+    }
+
+    #snackbar.show {
+        visibility: visible;
+        -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+
+    @-webkit-keyframes fadein {
+        from {bottom: 0; opacity: 0;}
+        to {bottom: 30px; opacity: 1;}
+    }
+
+    @keyframes fadein {
+        from {bottom: 0; opacity: 0;}
+        to {bottom: 30px; opacity: 1;}
+    }
+
+    @-webkit-keyframes fadeout {
+        from {bottom: 30px; opacity: 1;}
+        to {bottom: 0; opacity: 0;}
+    }
+
+    @keyframes fadeout {
+        from {bottom: 30px; opacity: 1;}
+        to {bottom: 0; opacity: 0;}
+    }
+</style>
+<body>
+
+<div class="limiter">
+    <div class="container-login100" style="background-image: url('../static/image/bg-01.jpg');">
+        <div class="wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54">
+            <form class="login100-form validate-form" >
+                <!--                <span class="login100-form-title p-b-49">登录</span>-->
+                <div style="width: 100%;text-align: center">
+                    <img style="width: 70%;" src="../static/image/login_s.png"><br>
+                </div>
+                <div class="wrap-input100 validate-input m-b-23" data-validate="请输入用户名">
+                    <br>
+                    <input class="input100" type="text" id="userAccount" placeholder="请输入用户名">
+                    <span class="focus-input100" data-symbol="&#xf206;"></span>
+                </div>
+
+                <div class="wrap-input100 validate-input" data-validate="请输入密码">
+                    <input class="input100" type="password" id="userPassWord" placeholder="请输入密码" >
+                    <span class="focus-input100" data-symbol="&#xf190;"></span>
+                </div>
+
+                <div class="text-right p-t-8 p-b-31">
+                    <a href="http://WWw.Aspku.com">忘记密码？</a>
+                </div>
+
+                <div class="container-login100-form-btn">
+                    <div class="wrap-login100-form-btn">
+                        <div class="login100-form-bgbtn"></div>
+                        <input type="button" onclick="login()" value="登 录" class="log">
+                    </div>
+                </div>
+
+                <div class="txt1 text-center p-t-54 p-b-20">
+                    <span>第三方登录</span>
+                </div>
+
+                <div class="flex-c-m">
+                    <a href="#" class="login100-social-item bg1">
+                        <i class="fa fa-wechat"></i>
+                    </a>
+
+                    <a href="#" class="login100-social-item bg2">
+                        <i class="fa fa-qq"></i>
+                    </a>
+
+                    <a href="#" class="login100-social-item bg3">
+                        <i class="fa fa-weibo"></i>
+                    </a>
+                </div>
+
+                <div class="flex-col-c p-t-25">
+                    <a href="javascript:" class="txt2">立即注册</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="../static/vendor/jquery/jquery-3.2.1.min.js"></script>
+<script src="../static/js/main.js"></script>
+<style>
+    .copyrights {
+        text-indent: -9999px;
+        height: 0;
+        line-height: 0;
+        font-size: 0;
+        overflow: hidden;
+    }
+</style>
+<div class="copyrights" id="links20210126">
+    Collect from
+</div>
+<div id="snackbar"></div>
+</body>
+
+<script>
+    function login() {
+        $.ajax({
+            type: "POST",
+            url: "/login",
+            dataType:"json",
+            data: {"userAccount":document.getElementById("userAccount").value,"userPassWord":document.getElementById("userPassWord").value},
+            success:function(data){
+                if (data.code === "1111"){
+                    //缓存在浏览器，关闭失效；
+                    let map = data['data'];
+                    window.localStorage.setItem('token', map['token']);
+                    show("登录成功")
+                    location.href = "/path/toIndex";
+                }else if(data.code === "2222"){
+                    show(data.message)
+                }else if(data.code === "4444"){
+                    show(data.message)
+                }else{
+                    show("登录失败")
+                }
+            },
+            error:function(){
+                show("系统错误")
+            }
+        });
+    }
+
+    function show(txt){
+        $("#snackbar").empty();
+        $("#snackbar").append(txt)
+        myFunction();
+    }
+
+    function myFunction() {
+        let x = document.getElementById("snackbar")
+        x.className = "show";
+        setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+    }
+
+</script>
+
+</html>
