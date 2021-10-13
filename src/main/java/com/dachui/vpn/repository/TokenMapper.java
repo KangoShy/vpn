@@ -1,7 +1,7 @@
 package com.dachui.vpn.repository;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.dachui.vpn.login.domain.TokenDomain;
+import com.dachui.vpn.LoginPackage.domain.TokenDomain;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

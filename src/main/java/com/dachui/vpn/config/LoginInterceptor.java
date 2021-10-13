@@ -1,30 +1,32 @@
-package com.dachui.vpn.common;
+package com.dachui.vpn.config;
 
 import com.dachui.vpn.util.StringUtil;
 import com.dachui.vpn.util.TokenUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
+/**
+ * @Author: Zhouruibin
+ * @Date: Created in 19:07 2021/10/13
+ * @Description:
+ */
+@Slf4j
 @Component
 public class LoginInterceptor implements HandlerInterceptor {
 
-    private static Logger log = LoggerFactory.getLogger(LoginInterceptor.class);
-
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object hander) throws IOException {
-        if (hander instanceof ResourceHttpRequestHandler) {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        if (handler instanceof HandlerMethod) {
             return true;
         }
         response.setCharacterEncoding("UTF-8");
         String token = request.getHeader("Authorization");
-
         if (StringUtil.isNotBlank(token)){
             if (TokenUtils.verify(token)){
                 log.info("请求通过：{}", request.getRequestURL());
@@ -35,7 +37,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))){
             response.setHeader("REDIRECT", "REDIRECT");
         }else{
-            response.sendRedirect("/path/toLogin");
+            response.sendRedirect("/toLogin");
         }
         return false;
     }

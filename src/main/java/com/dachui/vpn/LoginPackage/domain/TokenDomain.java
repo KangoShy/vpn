@@ -1,9 +1,11 @@
-package com.dachui.vpn.login.domain;
+package com.dachui.vpn.LoginPackage.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.Id;
 
@@ -12,6 +14,8 @@ import javax.persistence.Id;
  * @Date: 2021/3/7 11:22
  * @Description:
  */
+@Getter
+@Setter
 @TableName(value = "user_token")
 public class TokenDomain {
     @Id
@@ -23,36 +27,4 @@ public class TokenDomain {
     private Long buildTime;
     @TableField(value = "token")
     private String token;
-
-    public Long getId() {
-        return id;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public Long getBuildTime() {
-        return buildTime;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public void setBuildTime(Long buildTime) {
-        this.buildTime = buildTime;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
 }

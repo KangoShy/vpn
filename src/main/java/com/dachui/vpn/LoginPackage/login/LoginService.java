@@ -1,11 +1,11 @@
-package com.dachui.vpn.login;
+package com.dachui.vpn.LoginPackage.login;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.dachui.vpn.LoginPackage.domain.TokenDomain;
 import com.dachui.vpn.common.Result;
 import com.dachui.vpn.enums.ReturnCodeStatusEnum;
-import com.dachui.vpn.login.domain.TokenDomain;
 import com.dachui.vpn.model.po.UcenterMember;
 import com.dachui.vpn.repository.TokenMapper;
 import com.dachui.vpn.repository.UcenterMemberMapper;
@@ -59,9 +59,8 @@ public class LoginService {
             if (!userPO.getUserAccount().equalsIgnoreCase(ucenterMember.getUserAccount())) {
                 return Result.instance(ReturnCodeStatusEnum.ACCOUT_OR_PASS_FAIL);
             }
-            // AES
-            String encrypt = AESUtil.Encrypt(ucenterMember.getUserPassWord());
-            if (!encrypt.equals(userPO.getUserPassWord())) {
+            String encrypt = AESUtil.Decrypt(userPO.getUserPassWord());
+            if (!ucenterMember.getUserPassWord().equals(encrypt)) {
                 return Result.instance(ReturnCodeStatusEnum.ACCOUT_OR_PASS_FAIL);
             }
             String jwtToken = TokenUtils.getToken(userPO.getUserAccount(), userPO.getUserPassWord());

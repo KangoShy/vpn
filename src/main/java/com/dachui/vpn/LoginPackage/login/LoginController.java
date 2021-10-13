@@ -1,4 +1,4 @@
-package com.dachui.vpn.login;
+package com.dachui.vpn.LoginPackage.login;
 
 import com.dachui.vpn.common.Result;
 import com.dachui.vpn.enums.ReturnCodeStatusEnum;

@@ -1,6 +1,7 @@
 package com.dachui.vpn.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.dachui.vpn.enums.RedisConstantsKeyEnum;
 import com.dachui.vpn.enums.OrderStatusEnum;
 import com.dachui.vpn.model.po.OrderRecordsPO;
 import com.dachui.vpn.model.vo.ComboResultVO;
@@ -10,6 +11,8 @@ import com.dachui.vpn.model.vo.PlaceOrderRequestVO;
 import com.dachui.vpn.repository.OrderRecordsMapper;
 import com.dachui.vpn.repository.UserKnowMapper;
 import com.dachui.vpn.repository.VpnComboMapper;
+import com.dachui.vpn.util.RedisUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -17,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @SuppressWarnings("unchecked")
 public class VpnService {
@@ -27,35 +31,50 @@ public class VpnService {
     private VpnComboMapper vpnComboMapper;
     @Resource
     private OrderRecordsMapper orderRecordsMapper;
+    @Resource
+    private RedisUtil redisUtil;
 
     public Object getUserKnow() {
-        List<UserKnowPO> resultList = Optional.ofNullable(
-                userKnowMapper.selectList(
-                        Wrappers.<UserKnowPO>lambdaQuery().orderByAsc(UserKnowPO::getId))).orElse(Collections.EMPTY_LIST);
-        List<String> collect = resultList.stream().map(UserKnowPO::getText).collect(Collectors.toList());
-        Integer i = 0;
+        Object o = redisUtil.get(RedisConstantsKeyEnum.USER_KNOW_KEY.getKey());
         List<String> collList = new ArrayList<>();
-        for (String t : collect) {
-            i++;
-            collList.add(i + "、".concat(t));
+        if (o == null) {
+            List<UserKnowPO> resultList = Optional.ofNullable(
+                    userKnowMapper.selectList(
+                            Wrappers.<UserKnowPO>lambdaQuery().orderByAsc(UserKnowPO::getId))).orElse(Collections.EMPTY_LIST);
+            List<String> collect = resultList.stream().map(UserKnowPO::getText).collect(Collectors.toList());
+            Integer i = 0;
+            for (String t : collect) {
+                i++;
+                collList.add(i + "、".concat(t));
+            }
+            redisUtil.set(RedisConstantsKeyEnum.USER_KNOW_KEY.getKey(), collList, RedisConstantsKeyEnum.USER_KNOW_KEY.getCacheTime());
+            return collList;
         }
+        collList = ((List<String>) o);
+        log.info(RedisConstantsKeyEnum.USER_KNOW_KEY.getDesc().concat("{}"), "---> 从缓存获取");
         return collList;
     }
 
     public Object getComboList() {
-        List<VpnComboPO> list = Optional.ofNullable(
-                vpnComboMapper.selectList(
-                        Wrappers.<VpnComboPO>lambdaQuery().eq(VpnComboPO::isDeleted, Boolean.FALSE).orderByDesc(VpnComboPO::getUpdateTime))
-        ).orElse(Collections.EMPTY_LIST);
         List<ComboResultVO> collectList = new ArrayList<>();
-        for (VpnComboPO po : list) {
-            BigDecimal comboPrice = po.getComboPrice();
-            ComboResultVO vo = new ComboResultVO();
-            vo.setComboName(po.getComboName());
-            vo.setComboPrice("￥".concat(comboPrice.toPlainString()).concat(".00 CNY"));
-            vo.setId(po.getId());
-            collectList.add(vo);
+        Object o = redisUtil.get(RedisConstantsKeyEnum.COM_BO_KEY.getKey());
+        if (o == null) {
+            List<VpnComboPO> list = Optional.ofNullable(
+                    vpnComboMapper.selectList(
+                            Wrappers.<VpnComboPO>lambdaQuery().eq(VpnComboPO::isDeleted, Boolean.FALSE).orderByDesc(VpnComboPO::getUpdateTime))).orElse(Collections.EMPTY_LIST);
+            for (VpnComboPO po : list) {
+                BigDecimal comboPrice = po.getComboPrice();
+                ComboResultVO vo = new ComboResultVO();
+                vo.setComboName(po.getComboName());
+                vo.setComboPrice("￥".concat(comboPrice.toPlainString()).concat(".00 CNY"));
+                vo.setId(po.getId());
+                collectList.add(vo);
+            }
+            redisUtil.set(RedisConstantsKeyEnum.COM_BO_KEY.getKey(), collectList, RedisConstantsKeyEnum.COM_BO_KEY.getCacheTime());
+            return collectList;
         }
+        collectList = ((List<ComboResultVO>) o);
+        log.info(RedisConstantsKeyEnum.COM_BO_KEY.getDesc().concat("{}"), "---> 从缓存获取");
         return collectList;
     }
 

@@ -28,12 +28,30 @@ spring:
       max-request-size: 500MB
   thymeleaf:
     prefix: classpath:/templates/
+    check-template-location: true
     suffix: .html
-    mode: HTML5
     encoding: UTF-8
+    content-type: text/html
+    mode: HTML5
+    cache: false
+  static-path-pattern: /static/**
 
 minio:
   endpoint: http://localhost:9000 #Minio服务所在地址
   bucketName: tcc #存储桶名称
   accessKey: tanchuntcc #访问的key
   secretKey: tanchuntcc #访问的秘钥
+
+
+redis:
+  host: 103.243.26.140
+  port: 6379 #port
+  password:
+  jedis:
+    pool:
+      max-active: 8
+      max-wait: -1
+      max-idle: 500
+      min-idle: 0
+  lettuce:
+    shutdown-timeout: 0
