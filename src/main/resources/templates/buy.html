@@ -141,7 +141,6 @@
 <!--Introduction and Demo Only -->
 <br>
 <header class="intro">
-    <span id="combo"></span>
     <!--<h1>jquery滑动侧边栏插件jSide</h1>
     <div class="htmleaf-links">
       <a class="htmleaf-icon icon-htmleaf-home-outline" href="http://www.htmleaf.com/" title="jQuery之家" target="_blank"><span> jQuery之家</span></a>
@@ -254,18 +253,24 @@
     }
 
     function placeOrder(id, name) {
-        alert("正在生成订单号，请稍等...")
-        // let value = document.getElementById("zjje").innerText;
-        // $.ajax({
-        //     url:'/placeTheOrder',
-        //     type: 'POST',
-        //     dataType:'json',
-        //     contentType: 'application/json; charset=UTF-8',
-        //     data:JSON.stringify({'comboId':id, 'comboName': name, 'price': value}),
-        //     success:function(res) {
-        //         alert("下单成功");
-        //     }
-        // })
+        let value = document.getElementById("zjje").innerText;
+        let type = document.getElementById("pjfkfs").innerText;
+        $.ajax({
+            url:'/vpn/placeTheOrder',
+            type: 'POST',
+            dataType:'json',
+            contentType: 'application/json; charset=UTF-8',
+            data:JSON.stringify({'comboId':id, 'comboName': name, 'price': value, 'type': type}),
+            success:function(res) {
+                let data = res.data;
+                let comboName = data.comboName;
+                let comboType = data.comboType;
+                let orderId = data.orderId;
+                let price = data.orderPrice;
+                let time = data.createTime;
+                window.location.href = "/creatOrder?comboName=" + comboName + "&comboType=" + comboType + "&orderId=" + orderId + "&time=" + time + "&price=" + price;
+            }
+        })
     }
 </script>
 </body>

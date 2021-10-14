@@ -1,7 +1,11 @@
 package com.dachui.vpn.controller;
 
 import com.dachui.vpn.common.Result;
+import com.dachui.vpn.model.po.OrderRecordsPO;
+import com.dachui.vpn.model.vo.PayRequestVO;
+import com.dachui.vpn.model.vo.PlaceOrderRequestVO;
 import com.dachui.vpn.service.VpnService;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -23,6 +27,24 @@ public class VpnController {
     @GetMapping("/getComboList")
     public Result<?> getComboList() {
         return Result.success(vpnService.getComboList());
+    }
+
+    /* 下单 */
+    @PostMapping("/placeTheOrder")
+    public Result<OrderRecordsPO> placeTheOrder(@RequestBody PlaceOrderRequestVO requestVO) {
+        return Result.success(vpnService.placeTheOrder(requestVO));
+    }
+
+    /* 关闭订单 */
+    @GetMapping("/closeOrder")
+    public Result<Boolean> closeOrder(String orderId) {
+        return Result.success(vpnService.closeOrder(orderId));
+    }
+
+    /* 付款 */
+    @PostMapping("/pay")
+    public Result<Object> pay(@RequestBody PayRequestVO payRequestVO) {
+        return vpnService.pay(payRequestVO);
     }
 
 }

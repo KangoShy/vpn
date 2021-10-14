@@ -1,7 +1,6 @@
 package com.dachui.vpn.controller;
 
 import io.minio.MinioClient;
-import io.minio.policy.PolicyType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,16 +40,21 @@ public class FileDownloadClass {
         try {
             MinioClient minioClient = new MinioClient(ENDPOINT, ACCESSKEY, SECRETKEY);
             //存入bucket不存在则创建，并设置为只读
+            //低版本的minio依赖会在解析xml时报错
             if (!minioClient.bucketExists(BUCKETNAME)) {
                 minioClient.makeBucket(BUCKETNAME);
-                minioClient.setBucketPolicy(BUCKETNAME, "*.*", PolicyType.READ_ONLY);
+                minioClient.setBucketPolicy(BUCKETNAME, "*.*");
             }
             String filename = file.getOriginalFilename();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             // 文件存储的目录结构
             String objectName = sdf.format(new Date()) + "/" + filename;
             // 存储文件
-            minioClient.putObject(BUCKETNAME, objectName, file.getResource().getInputStream(), file.getContentType());
+            minioClient.putObject(
+                    BUCKETNAME,
+                    objectName,
+                    file.getResource().getInputStream(),
+                    file.getContentType());
             log.info("文件上传成功!");
             s=ENDPOINT + "/" + BUCKETNAME + "/" + objectName;
         } catch (Exception e) {
@@ -89,7 +93,7 @@ public class FileDownloadClass {
             }
             outputStream.close();
         } catch (Exception ex) {
-            log.info("文件下载失败：", ex.getMessage());
+            log.info("文件下载失败：{}", ex.getMessage());
         }
     }
 }

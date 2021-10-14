@@ -1,12 +1,16 @@
 package com.dachui.vpn.service;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.dachui.vpn.common.Result;
+import com.dachui.vpn.common.UserInfoUtil;
 import com.dachui.vpn.enums.RedisConstantsKeyEnum;
 import com.dachui.vpn.enums.OrderStatusEnum;
 import com.dachui.vpn.model.po.OrderRecordsPO;
 import com.dachui.vpn.model.vo.ComboResultVO;
 import com.dachui.vpn.model.po.UserKnowPO;
 import com.dachui.vpn.model.po.VpnComboPO;
+import com.dachui.vpn.model.vo.PayRequestVO;
 import com.dachui.vpn.model.vo.PlaceOrderRequestVO;
 import com.dachui.vpn.repository.OrderRecordsMapper;
 import com.dachui.vpn.repository.UserKnowMapper;
@@ -90,19 +94,54 @@ public class VpnService {
             comboId = -1L;
         }
         VpnComboPO vpnComboPO = selectComboById(comboId.toString());
-        if (vpnComboPO != null) {
-            String replace = UUID.randomUUID().toString().replace("-", "");
-            OrderRecordsPO orderRecordsPO = new OrderRecordsPO();
-            orderRecordsPO.setComboId(vpnComboPO.getId());
-            orderRecordsPO.setComboName(vpnComboPO.getComboName());
-            orderRecordsPO.setOrderId(replace);
-            orderRecordsPO.setOrderPrice(requestVO.getPrice());
-            orderRecordsPO.setDeleted(Boolean.FALSE);
-            orderRecordsPO.setOrderStatus(OrderStatusEnum.PAY_NO.getCode());
-            orderRecordsPO.setCreateTime(new Date());
-            orderRecordsMapper.insert(orderRecordsPO);
-            return orderRecordsPO;
+        if (vpnComboPO == null) {
+            throw new RuntimeException("套餐不存在！");
         }
-        return null;
+        String orderNo = UUID.randomUUID().toString().replace("-", "");
+        OrderRecordsPO orderRecordsPO = new OrderRecordsPO();
+        Long userId = UserInfoUtil.getUserId();
+        orderRecordsPO.setUserId(userId);
+        orderRecordsPO.setComboId(vpnComboPO.getId());
+        orderRecordsPO.setComboName(vpnComboPO.getComboName());
+        orderRecordsPO.setOrderId(orderNo);
+        orderRecordsPO.setOrderPrice(requestVO.getPrice());
+        orderRecordsPO.setPrice(requestVO.getPrice());
+        orderRecordsPO.setDeleted(Boolean.FALSE);
+        orderRecordsPO.setOrderStatus(OrderStatusEnum.PAY_NO.getCode());
+        orderRecordsPO.setCreateTime(new Date());
+        orderRecordsPO.setComboType(requestVO.getType());
+        orderRecordsMapper.insert(orderRecordsPO);
+        // 将订单缓存在redis中
+        redisUtil.set(
+                // "key = order::e562258e53964d7a8d4aa59afebb075f";
+                RedisConstantsKeyEnum.ORDER_CACHE_KEY.getKey().concat(orderNo),
+                orderRecordsPO,
+                RedisConstantsKeyEnum.ORDER_CACHE_KEY.getCacheTime()); // 失效时间
+        return orderRecordsPO;
+    }
+
+    public boolean closeOrder(String orderId) {
+        int update = orderRecordsMapper.update(null,
+                Wrappers.<OrderRecordsPO>lambdaUpdate().eq(OrderRecordsPO::getOrderId, orderId)
+                        .set(OrderRecordsPO::getUpdateTime, new Date()));
+        // 清空缓存订单数据
+        if (update == 1)
+            redisUtil.del(RedisConstantsKeyEnum.ORDER_CACHE_KEY.getKey().concat(orderId));
+        return update == 1;
+    }
+
+    public Result<Object> pay(PayRequestVO PayRequestVO) {
+        OrderRecordsPO orderRecordsPO = orderRecordsMapper.selectOne(
+                Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, PayRequestVO.getOrderId()));
+        if (orderRecordsPO.isDeleted()) {
+            return Result.fail("该订单未及时支付已超时，请重新下单");
+        }
+        // TODO 支付包付款
+
+        // TODO 对帐
+
+        // TODO 返回成功
+
+        return Result.success("付款完成");
     }
 }

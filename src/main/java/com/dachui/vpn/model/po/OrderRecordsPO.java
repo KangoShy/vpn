@@ -17,6 +17,8 @@ public class OrderRecordsPO extends BaseEntity {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
+    @TableField("user_id")
+    private Long userId;
     @TableField("order_id")
     private String orderId;
     @TableField("combo_id")
@@ -33,4 +35,6 @@ public class OrderRecordsPO extends BaseEntity {
     private String pay;
     @TableField("pay_time")
     private Date payTime;
+    @TableField("price")
+    private Long price;
 }

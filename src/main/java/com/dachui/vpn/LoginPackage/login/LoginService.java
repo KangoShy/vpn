@@ -63,7 +63,7 @@ public class LoginService {
             if (!ucenterMember.getUserPassWord().equals(encrypt)) {
                 return Result.instance(ReturnCodeStatusEnum.ACCOUT_OR_PASS_FAIL);
             }
-            String jwtToken = TokenUtils.getToken(userPO.getUserAccount(), userPO.getUserPassWord());
+            String jwtToken = TokenUtils.getToken(userPO);
             LambdaQueryWrapper<TokenDomain> tokenWrappers = Wrappers.lambdaQuery();
             tokenWrappers.eq(TokenDomain::getUserId, userPO.getUserId());
             TokenDomain tokenDomain = tokenMapper.selectOne(tokenWrappers);

@@ -1,5 +1,7 @@
 package com.dachui.vpn.config;
 
+import com.dachui.vpn.common.UserInfoUtil;
+import com.dachui.vpn.model.UserInfo;
 import com.dachui.vpn.util.StringUtil;
 import com.dachui.vpn.util.TokenUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,8 @@ public class LoginInterceptor implements HandlerInterceptor {
         String token = request.getHeader("Authorization");
         if (StringUtil.isNotBlank(token)){
             if (TokenUtils.verify(token)){
+                UserInfo userInfo = TokenUtils.getUserInfo(token);
+                UserInfoUtil.setUserInfo(userInfo);
                 log.info("请求通过：{}", request.getRequestURL());
                 return true;
             }

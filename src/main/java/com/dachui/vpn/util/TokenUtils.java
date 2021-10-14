@@ -5,13 +5,19 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.dachui.vpn.model.UserInfo;
+import com.dachui.vpn.model.po.UcenterMember;
+import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import org.apache.commons.lang.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
+import java.security.Key;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author: DACHUI
@@ -26,35 +32,31 @@ public class TokenUtils {
     //设置过期时间
     private static final long EXPIRE_DATE = 1000 * 60 * 5;
     //token秘钥
-    private static final String TOKEN_SECRET = "r54eg5sae4r665ser54rg";
+    private static final String TOKEN_SECRET = "";
+
+    public static final int CALENDAR_INTERVAL = 60 * 2;
 
     //实现签名方法
-    public static String getToken(String username, String password) {
+    public static String getToken(UcenterMember userInfo) {
 
-        String token = "";
+        String jwtToken;
         try {
-            //这里将useName 和 password 存入了Token，在下面的解析中，也会有解析的方法可以获取到Token里面的数据
-            //Token过期的时间
-            //过期时间
-            Date date = new Date(System.currentTimeMillis() + EXPIRE_DATE);
-            //秘钥及加密算法
-            Algorithm algorithm = Algorithm.HMAC256(TOKEN_SECRET);
-            //设置头部信息,类型以及签名所用的算法
-            Map<String, Object> header = new HashMap<>();
-            header.put("typ", "JWT");
-            header.put("alg", "HS256");
-            //携带username，password信息，存入token，生成签名
-            token = JWT.create()
-                    .withHeader(header)
-                    //存储自己想要留给前端的内容
-                    .withClaim("username", username)
-                    .withClaim("password", password).withExpiresAt(date)
-                    .sign(algorithm);
+            String JWT_SECRET = "r54eg5sae4r665ser54rg";
+            Key key =
+                    new SecretKeySpec(
+                            JWT_SECRET.getBytes(), SignatureAlgorithm.HS256.getJcaName()); // 这里是加密解密的key。
+            JwtBuilder jwtBuilder =
+                    Jwts.builder() // 返回的字符串便是jwt串了
+                            .setSubject(JsonUtil.toJsonFromObject(userInfo))
+                            .signWith(SignatureAlgorithm.HS256, key) // 设置算法（必须）
+                            .setExpiration(
+                                    DateUtils.addMinutes(new Date(), CALENDAR_INTERVAL)); // 这个是全部设置完成后拼成jwt串的方法
+            jwtToken = jwtBuilder.compact();
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            throw new RuntimeException("创建token失败");
         }
-        return token;
+        return jwtToken;
     }
 
     /**
@@ -80,11 +82,17 @@ public class TokenUtils {
      * @return
      */
 
-    public static String getUserAccount(String token) {
+    public static UserInfo getUserInfo(String token) {
         try {
             DecodedJWT jwt = JWT.decode(token);
-            return jwt.getClaim("username").asString();
-
+            String userInfoJson = jwt.getSubject();
+            UserInfo userInfo = new UserInfo();
+            if (StringUtil.isEmpty(userInfoJson)) {
+                return userInfo;
+            }
+            userInfo = JsonUtil.toBeanFromStr(userInfoJson, UserInfo.class);
+            return userInfo;
+            //return jwt.getClaim("userId").asString();
         } catch (JWTDecodeException e) {
             e.printStackTrace();
         }
