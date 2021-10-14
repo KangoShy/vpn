@@ -14,4 +14,6 @@ public class PlaceOrderRequestVO {
 
     private Long price; // 应付金额
 
+    private String type; //付款周期
+
 }

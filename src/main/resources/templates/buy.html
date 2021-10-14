@@ -105,20 +105,20 @@
 
     <ul class="menu-items">
 
-        <li><span class="item-icon"> <i class="zmdi zmdi-tv"></i> </span> <a href="/path/toIndex">
+        <li><span class="item-icon"> <i class="zmdi zmdi-tv"></i> </span> <a href="/toIndex">
             首页 </a></li>
 
-        <li><span class="item-icon"><i class="zmdi zmdi-android"></i></span> <a href="/path/androidCourse">
+        <li><span class="item-icon"><i class="zmdi zmdi-android"></i></span> <a href="/androidCourse">
             Android 使用教程 </a></li>
 
-        <li><span class="item-icon"> <i class="zmdi zmdi-apple"></i> </span> <a href="/path/iosCourse">
+        <li><span class="item-icon"> <i class="zmdi zmdi-apple"></i> </span> <a href="/iosCourse">
             IOS 使用教程 </a></li>
 
         <li class="has-sub"><span class="item-icon"> <i class="zmdi zmdi-windows"></i> </span>
-            <a href="/path/windowsCourse">Windows 使用教程</a></li>
+            <a href="/windowsCourse">Windows 使用教程</a></li>
 
         <li class="has-sub"><span class="item-icon"> <i class="zmdi zmdi-devices"></i> </span>
-            <a href="/path/macCourse">Mac 使用教程</a></li>
+            <a href="/macCourse">Mac 使用教程</a></li>
 
 
         <li><span class="item-icon"> <i class="zmdi zmdi-keyboard"></i> </span> <a href="#1">
@@ -128,7 +128,7 @@
             关于我们 </a></li>
 
 
-        <li><span class="item-icon"> <i class="zmdi zmdi-mouse"></i> </span> <a href="/path/customerService">
+        <li><span class="item-icon"> <i class="zmdi zmdi-mouse"></i> </span> <a href="/customerService">
             联系客服 </a></li>
 
     </ul>
@@ -141,7 +141,6 @@
 <!--Introduction and Demo Only -->
 <br>
 <header class="intro">
-    <span id="combo"></span>
     <!--<h1>jquery滑动侧边栏插件jSide</h1>
     <div class="htmleaf-links">
       <a class="htmleaf-icon icon-htmleaf-home-outline" href="http://www.htmleaf.com/" title="jQuery之家" target="_blank"><span> jQuery之家</span></a>
@@ -165,22 +164,22 @@
 
 <main>
     <article>
-        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPrice}+')' "  class="fkLx">月付 <span th:text="${comboPO.getComboPrice()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
+        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPrice}+',1)' "  class="fkLx">月付 <span th:text="${comboPO.getComboPrice()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
     </article>
 </main>
 <main>
     <article>
-        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPriceQuarter}+')' " class="fkLx">季付 <span th:text="${comboPO.getComboPriceQuarter()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
+        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPriceQuarter}+',2)' " class="fkLx">季付 <span th:text="${comboPO.getComboPriceQuarter()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
     </article>
 </main>
 <main>
     <article>
-        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPriceHalfYear}+')' " class="fkLx">半年付 <span th:text="${comboPO.getComboPriceHalfYear()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
+        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPriceHalfYear}+',3)' " class="fkLx">半年付 <span th:text="${comboPO.getComboPriceHalfYear()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
     </article>
 </main>
 <main>
     <article>
-        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPriceYear}+')' " class="fkLx">年付 <span th:text="${comboPO.getComboPriceYear()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
+        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPriceYear}+',4)' " class="fkLx">年付 <span th:text="${comboPO.getComboPriceYear()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
     </article>
 </main>
 
@@ -196,7 +195,7 @@
 <main style="background: rgb(52 55 60);color: white">
     <article>
         <h4><strong>订单总额</strong></h4>
-        <h4><span th:text="${comboPO.comboName}"></span> x 月付</h4>
+        <h4><span th:text="${comboPO.comboName}"></span> x <span id="pjfkfs">月付</span></h4>
         <hr/>
         <br>
         <h3 style="color: #8183a8">总计</h3>
@@ -238,25 +237,41 @@
 
     };
 
-    function toChagePrice(x){
+    function toChagePrice(x, val){
         $("#zjje").html(x);
+        let v;
+        if (val === 1) {
+            v = "月付";
+        }else if (val === 2){
+            v = "季付";
+        }else if(val === 3) {
+            v = "半年付";
+        }else{
+            v = "年付";
+        }
+        $("#pjfkfs").html(v);
     }
 
     function placeOrder(id, name) {
         let value = document.getElementById("zjje").innerText;
+        let type = document.getElementById("pjfkfs").innerText;
         $.ajax({
-            url:'/path/placeTheOrder',
+            url:'/vpn/placeTheOrder',
             type: 'POST',
             dataType:'json',
             contentType: 'application/json; charset=UTF-8',
-            data:JSON.stringify({'comboId':id, 'comboName': name, 'price': value}),
+            data:JSON.stringify({'comboId':id, 'comboName': name, 'price': value, 'type': type}),
             success:function(res) {
-                alert(res);
+                let data = res.data;
+                let comboName = data.comboName;
+                let comboType = data.comboType;
+                let orderId = data.orderId;
+                let price = data.orderPrice;
+                let time = data.createTime;
+                window.location.href = "/creatOrder?comboName=" + comboName + "&comboType=" + comboType + "&orderId=" + orderId + "&time=" + time + "&price=" + price;
             }
         })
     }
-
-
 </script>
 </body>
 </html>

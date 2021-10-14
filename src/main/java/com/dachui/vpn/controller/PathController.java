@@ -2,7 +2,6 @@ package com.dachui.vpn.controller;
 
 import com.dachui.vpn.model.po.OrderRecordsPO;
 import com.dachui.vpn.model.po.VpnComboPO;
-import com.dachui.vpn.model.result.Result;
 import com.dachui.vpn.model.vo.PlaceOrderRequestVO;
 import com.dachui.vpn.service.VpnService;
 import org.springframework.stereotype.Controller;
@@ -10,15 +9,20 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
 
 @Controller
-@RequestMapping("/path")
 public class PathController {
 
     @Resource
     private VpnService vpnService;
+
+    @RequestMapping("/toLogin")
+    public String getZrbLyLogin(){
+        return "login";
+    }
 
     @RequestMapping("/toIndex")
     public String toIndex() {
@@ -42,11 +46,13 @@ public class PathController {
         return "buy";
     }
 
-    /* 下单 */
-    @RequestMapping("/placeTheOrder")
-    public String placeTheOrder(@RequestBody PlaceOrderRequestVO requestVO, Model model) {
-        OrderRecordsPO orderRecordsPO = vpnService.placeTheOrder(requestVO);
-        model.addAttribute("orderRecords", orderRecordsPO);
+    @RequestMapping("/creatOrder")
+    public String creatOrder(String comboName, String comboType, String orderId, String time, String price ,Model model) {
+        model.addAttribute("comboName", comboName);
+        model.addAttribute("comboType", comboType);
+        model.addAttribute("orderId", orderId);
+        model.addAttribute("time", time);
+        model.addAttribute("price", price);
         return "creatOrder";
     }
 
