@@ -7,8 +7,6 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Id;
-
 /**
  * @author: DACHUI
  * @Date: 2021/3/7 11:06
@@ -19,7 +17,6 @@ import javax.persistence.Id;
 @TableName(value = "user_center")
 public class UcenterMember {
 
-    @Id
     @TableId(value = "user_id",type = IdType.AUTO)
     private String userId;
     @TableField(value = "user_name")

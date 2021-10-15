@@ -142,6 +142,15 @@
 
 <main>
     <article>
+        <div style="text-align: center">
+            <h3>待支付</h3>
+            <h4>支付完成后，掌柜将快速为您处理订单</h4>
+        </div>
+    </article>
+</main>
+
+<main>
+    <article>
         <h3>商品信息</h3>
         <h4 style="color: #605e5e">产品名称：<span th:text="${comboName}"></span></h4>
         <h4 style="color: #605e5e">类型/周期：<span th:text="${comboType}"></span></h4>
@@ -225,6 +234,7 @@
                     // TODO 跳转我的订单页面
                 }else{
                     alert(res.message);
+                    window.location.href="/toIndex";
                 }
             }
         })

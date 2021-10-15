@@ -1,15 +1,10 @@
 package com.dachui.vpn.controller;
 
-import com.dachui.vpn.model.po.OrderRecordsPO;
 import com.dachui.vpn.model.po.VpnComboPO;
-import com.dachui.vpn.model.vo.PlaceOrderRequestVO;
 import com.dachui.vpn.service.VpnService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
 
@@ -20,7 +15,7 @@ public class PathController {
     private VpnService vpnService;
 
     @RequestMapping("/toLogin")
-    public String getZrbLyLogin(){
+    public String getZrbLyLogin() {
         return "login";
     }
 
@@ -47,7 +42,7 @@ public class PathController {
     }
 
     @RequestMapping("/creatOrder")
-    public String creatOrder(String comboName, String comboType, String orderId, String time, String price ,Model model) {
+    public String creatOrder(String comboName, String comboType, String orderId, String time, String price, Model model) {
         model.addAttribute("comboName", comboName);
         model.addAttribute("comboType", comboType);
         model.addAttribute("orderId", orderId);

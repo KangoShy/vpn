@@ -4,7 +4,9 @@ import com.dachui.vpn.common.Result;
 import com.dachui.vpn.enums.ReturnCodeStatusEnum;
 import com.dachui.vpn.model.po.UcenterMember;
 import com.dachui.vpn.util.StringUtil;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;

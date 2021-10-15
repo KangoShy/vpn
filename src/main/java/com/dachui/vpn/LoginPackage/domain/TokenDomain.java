@@ -7,8 +7,6 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Id;
-
 /**
  * @author: DACHUI
  * @Date: 2021/3/7 11:22
@@ -18,7 +16,6 @@ import javax.persistence.Id;
 @Setter
 @TableName(value = "user_token")
 public class TokenDomain {
-    @Id
     @TableId(value = "id",type = IdType.AUTO)
     private Long id;
     @TableField(value = "user_id")

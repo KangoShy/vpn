@@ -1,11 +1,14 @@
 package com.dachui.vpn.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.dachui.vpn.common.Result;
 import com.dachui.vpn.common.UserInfoUtil;
+import com.dachui.vpn.config.AroundException;
 import com.dachui.vpn.enums.RedisConstantsKeyEnum;
 import com.dachui.vpn.enums.OrderStatusEnum;
+import com.dachui.vpn.enums.ReturnCodeStatusEnum;
 import com.dachui.vpn.model.po.OrderRecordsPO;
 import com.dachui.vpn.model.vo.ComboResultVO;
 import com.dachui.vpn.model.po.UserKnowPO;
@@ -16,6 +19,7 @@ import com.dachui.vpn.repository.OrderRecordsMapper;
 import com.dachui.vpn.repository.UserKnowMapper;
 import com.dachui.vpn.repository.VpnComboMapper;
 import com.dachui.vpn.util.RedisUtil;
+import com.dachui.vpn.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -95,7 +99,7 @@ public class VpnService {
         }
         VpnComboPO vpnComboPO = selectComboById(comboId.toString());
         if (vpnComboPO == null) {
-            throw new RuntimeException("套餐不存在！");
+            throw new AroundException(ReturnCodeStatusEnum.SYSTEM_ERROR,"套餐不存在！");
         }
         String orderNo = UUID.randomUUID().toString().replace("-", "");
         OrderRecordsPO orderRecordsPO = new OrderRecordsPO();
@@ -117,12 +121,54 @@ public class VpnService {
                 RedisConstantsKeyEnum.ORDER_CACHE_KEY.getKey().concat(orderNo),
                 orderRecordsPO,
                 RedisConstantsKeyEnum.ORDER_CACHE_KEY.getCacheTime()); // 失效时间
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                synchronized (timer) {
+                    syncOrderStatus(orderNo);
+                }
+            }
+            // 延迟处理订单
+        }, (RedisConstantsKeyEnum.getDescTime()));
         return orderRecordsPO;
     }
+
+    private void syncOrderStatus(String orderNo) {
+        log.info("--------> 开始处理订单\n");
+        LambdaQueryWrapper<OrderRecordsPO> wrapper =
+                Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, orderNo).eq(OrderRecordsPO::isDeleted, Boolean.FALSE);
+        OrderRecordsPO orderPo = orderRecordsMapper.selectOne(wrapper);
+        if (orderPo != null) {
+            Date date = new Date();
+            LambdaUpdateWrapper<OrderRecordsPO> updateWrapper = Wrappers.lambdaUpdate();
+            // 无效订单/已付款订单-关闭
+            if (OrderStatusEnum.PAY_TIMEOUT.getCode().equals(orderPo.getOrderStatus())
+                    || OrderStatusEnum.PAY_YES.getCode().equals(orderPo.getOrderStatus())) {
+                orderRecordsMapper.update(null,
+                        updateWrapper.eq(OrderRecordsPO::getId, orderPo.getId())
+                                .set(OrderRecordsPO::isDeleted, Boolean.TRUE).set(OrderRecordsPO::getUpdateTime, date));
+                log.info("发现一条无效/已付款订单-已关闭， id = {}\n", orderPo.getId());
+                return;
+            }
+            // 从redis获取订单数据
+            Object o = redisUtil.get(RedisConstantsKeyEnum.ORDER_CACHE_KEY.getKey().concat(orderNo));
+            if (o == null || StringUtil.isEmpty(o.toString())) {
+                orderRecordsMapper.update(null,
+                        updateWrapper.eq(OrderRecordsPO::getOrderId, orderNo)
+                                .set(OrderRecordsPO::isDeleted, Boolean.TRUE).set(OrderRecordsPO::getUpdateTime, date));
+                log.info("发现一条未支付已超时订单-已关闭， orderNo = {}\n", orderNo);
+            }
+        } else {
+            log.info("该订单已经正常关闭，orderNo = {}\n", orderNo);
+        }
+    }
+
 
     public boolean closeOrder(String orderId) {
         int update = orderRecordsMapper.update(null,
                 Wrappers.<OrderRecordsPO>lambdaUpdate().eq(OrderRecordsPO::getOrderId, orderId)
+                        .set(OrderRecordsPO::isDeleted, Boolean.TRUE)
                         .set(OrderRecordsPO::getUpdateTime, new Date()));
         // 清空缓存订单数据
         if (update == 1)
@@ -136,7 +182,7 @@ public class VpnService {
         if (orderRecordsPO.isDeleted()) {
             return Result.fail("该订单未及时支付已超时，请重新下单");
         }
-        // TODO 支付包付款
+        // TODO 支付宝付款
 
         // TODO 对帐
 

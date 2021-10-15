@@ -31,6 +31,7 @@ public class VpnController {
 
     /* 下单 */
     @PostMapping("/placeTheOrder")
+    @ExceptionHandler(ArithmeticException.class)
     public Result<OrderRecordsPO> placeTheOrder(@RequestBody PlaceOrderRequestVO requestVO) {
         return Result.success(vpnService.placeTheOrder(requestVO));
     }

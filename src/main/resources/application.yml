@@ -4,14 +4,14 @@ server:
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: 123456
-    url: jdbc:mysql://103.243.26.140:3306/vpn?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
+    username: zxdev
+    password: dachui
+    url: jdbc:mysql://xxx.xxx.xxx.xxx:3306/vpn?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
 
   redis:
-    host: 103.243.26.140
+    host: xxx.xxxx.xxx.xxx
     port: 6379 #port
-    password: dachui
+    password: asdvqaedachuiad
     jedis:
       pool:
         max-active: 8
@@ -50,8 +50,8 @@ spring:
   static-path-pattern: /static/**
 
 minio:
-  endpoint: http://103.243.26.140:9000 #Minio服务地址
+  endpoint: http://xxx.xxx.xxxx.xxx:9000 #Minio服务地址
   bucketName: vpn #桶
-  accessKey: minioadmin
-  secretKey: minioadmin
+  accessKey: default
+  secretKey: default
 

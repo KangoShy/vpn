@@ -5,7 +5,6 @@ import com.dachui.vpn.model.UserInfo;
 import com.dachui.vpn.util.StringUtil;
 import com.dachui.vpn.util.TokenUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -29,6 +28,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         }
         response.setCharacterEncoding("UTF-8");
         String token = request.getHeader("Authorization");
+        log.info("进入拦截器，token = {}", token);
         if (StringUtil.isNotBlank(token)){
             if (TokenUtils.verify(token)){
                 UserInfo userInfo = TokenUtils.getUserInfo(token);
