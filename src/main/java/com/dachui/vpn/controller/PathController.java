@@ -14,8 +14,15 @@ public class PathController {
     @Resource
     private VpnService vpnService;
 
+    @RequestMapping("/")
+    public String lll() {
+        System.err.println("进入login");
+        return "login";
+    }
+
     @RequestMapping("/toLogin")
-    public String getZrbLyLogin() {
+    public String toLogin() {
+        System.err.println("进入login");
         return "login";
     }
 

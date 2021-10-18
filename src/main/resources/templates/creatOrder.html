@@ -221,23 +221,35 @@
     };
 
     function invoicing(price, orderId) {
-        $.ajax({
-            url:'/vpn/pay',
-            type: 'POST',
-            dataType:'json',
-            contentType: 'application/json; charset=UTF-8',
-            data:JSON.stringify({'price':price, 'orderId': orderId}),
-            success:function(res) {
-                let code = res.code;
-                if (code === "0000") {
-                    alert("支付成功！");
-                    // TODO 跳转我的订单页面
-                }else{
-                    alert(res.message);
-                    window.location.href="/toIndex";
-                }
-            }
-        })
+        // $.ajax({
+        //     url:'/vpn/pay',
+        //     type: 'POST',
+        //     dataType:'json',
+        //     contentType: 'application/json; charset=UTF-8',
+        //     data:JSON.stringify({'price':price, 'orderId': orderId}),
+        //     success:function(res) {
+        //         let code = res.code;
+        //         if (code === "0000") {
+        //             alert("支付成功！");
+        //             // TODO 跳转我的订单页面
+        //         }else{
+        //             alert(res.message);
+        //             window.location.href="/toIndex";
+        //         }
+        //     }
+        // })
+        // /////////////////////////
+        // $.ajax({
+        //     url:'/alipay/webPay',
+        //     type: 'POST',
+        //     dataType:'json',
+        //     //contentType: 'application/json; charset=UTF-8',
+        //     //data:JSON.stringify({'price':price, 'orderId': orderId}),
+        //     success:function(res) {
+        //         console.log(res);
+        //     }
+        // })
+        window.location.href = "/alipay/webPay";
     }
 
     function shutDownOrder(orderId, val) {

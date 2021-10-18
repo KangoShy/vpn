@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAsync
 @EnableScheduling
 @MapperScan(basePackages = {"com.dachui.vpn.repository"})
-//@ComponentScan(basePackages = {"com.dachui.vpn.config"})
+//@ComponentScan(basePackages = {"com.dachui.vpn.common"})
 public class VpnApplication {
 
     public static void main(String[] args) {

@@ -1,4 +1,4 @@
-package com.dachui.vpn.config;
+package com.dachui.vpn.common;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
@@ -42,6 +42,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         List<String> excludePath = new ArrayList<>();
+        excludePath.add("/");
         excludePath.add("/register");
         excludePath.add("/toLogin");
         excludePath.add("/login");

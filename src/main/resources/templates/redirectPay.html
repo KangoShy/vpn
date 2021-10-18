@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <script src="../static/js/jquery-1.11.0.min.js" type="text/javascript"></script>
+    <title>支付</title>
+</head>
+<body>
+<div id="txt"></div>
+</body>
+<script>
+    window.onload=function() {
+        let txt = '[[${form}]]';
+        let s = txt.replace("&ge;", ">").replace("&lt;", "<");
+        $("#txt").html(s);
+    };
+</script>
+</html>
