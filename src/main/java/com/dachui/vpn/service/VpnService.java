@@ -9,6 +9,7 @@ import com.dachui.vpn.config.AroundException;
 import com.dachui.vpn.enums.RedisConstantsKeyEnum;
 import com.dachui.vpn.enums.OrderStatusEnum;
 import com.dachui.vpn.enums.ReturnCodeStatusEnum;
+import com.dachui.vpn.model.BaseEntity;
 import com.dachui.vpn.model.po.OrderRecordsPO;
 import com.dachui.vpn.model.vo.ComboResultVO;
 import com.dachui.vpn.model.po.UserKnowPO;
@@ -20,12 +21,16 @@ import com.dachui.vpn.repository.UserKnowMapper;
 import com.dachui.vpn.repository.VpnComboMapper;
 import com.dachui.vpn.util.RedisUtil;
 import com.dachui.vpn.util.StringUtil;
+import io.netty.util.HashedWheelTimer;
+import io.netty.util.Timeout;
+import io.netty.util.TimerTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -121,20 +126,13 @@ public class VpnService {
                 RedisConstantsKeyEnum.ORDER_CACHE_KEY.getKey().concat(orderNo),
                 orderRecordsPO,
                 RedisConstantsKeyEnum.ORDER_CACHE_KEY.getCacheTime()); // 失效时间
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                synchronized (timer) {
-                    syncOrderStatus(orderNo);
-                }
-            }
-            // 延迟处理订单
-        }, (RedisConstantsKeyEnum.getDescTime()));
+        HashedWheelTimer timer = new HashedWheelTimer();
+        timer.newTimeout(
+                timeout -> syncOrderStatus(orderNo), RedisConstantsKeyEnum.getDescTime(), TimeUnit.SECONDS);
         return orderRecordsPO;
     }
 
-    private void syncOrderStatus(String orderNo) {
+    private synchronized void syncOrderStatus(String orderNo) {
         log.info("--------> 开始处理订单\n");
         LambdaQueryWrapper<OrderRecordsPO> wrapper =
                 Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, orderNo).eq(OrderRecordsPO::isDeleted, Boolean.FALSE);

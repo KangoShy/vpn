@@ -14,7 +14,7 @@ public enum  RedisConstantsKeyEnum {
 
     USER_KNOW_KEY("user::know::key", 60 * 5L, "用户须知"),
     COM_BO_KEY("com::bo::key", 24 * 60 * 60L, "套餐列表"),
-    ORDER_CACHE_KEY("order::", 60 * 2L, "生成订单"),
+    ORDER_CACHE_KEY("order::", 60L, "生成订单"),
 
     ;
     private     final       String key;         // 缓存key
@@ -28,6 +28,7 @@ public enum  RedisConstantsKeyEnum {
 
     // 倒计时处理订单的时间
     public static Long getDescTime() {
-        return RedisConstantsKeyEnum.ORDER_CACHE_KEY.getCacheTime() * 1000;
+        // 如果使用Timer类，缓存时间 * 1000
+        return RedisConstantsKeyEnum.ORDER_CACHE_KEY.getCacheTime();
     }
 }

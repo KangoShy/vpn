@@ -70,4 +70,9 @@ public class PathController {
     public String windowsCourse() {
         return "windows";
     }
+
+    @RequestMapping("/sourceError")
+    public String sourceError() {
+        return "sourceError";
+    }
 }
