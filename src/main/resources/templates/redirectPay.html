@@ -9,10 +9,18 @@
 <div id="txt"></div>
 </body>
 <script>
-    window.onload=function() {
-        let txt = '[[${form}]]';
-        let s = txt.replace("&ge;", ">").replace("&lt;", "<");
-        $("#txt").html(s);
+    window.onload = function () {
+        pay();
     };
+
+    function pay() {
+        $.ajax({
+            url:'/alipay/webPay',
+            type:'GET',
+            success:function(res) {
+                $("#txt").html(res.message);
+            }
+        });
+    }
 </script>
 </html>

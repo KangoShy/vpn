@@ -108,17 +108,24 @@ public class VpnService {
         }
         String orderNo = UUID.randomUUID().toString().replace("-", "");
         OrderRecordsPO orderRecordsPO = new OrderRecordsPO();
-        Long userId = UserInfoUtil.getUserId();
-        orderRecordsPO.setUserId(userId);
+        Date now = new Date();
         orderRecordsPO.setComboId(vpnComboPO.getId());
+        // TODO 模拟userId
+        orderRecordsPO.setUserId(1L);
         orderRecordsPO.setComboName(vpnComboPO.getComboName());
         orderRecordsPO.setOrderId(orderNo);
         orderRecordsPO.setOrderPrice(requestVO.getPrice());
         orderRecordsPO.setPrice(requestVO.getPrice());
         orderRecordsPO.setDeleted(Boolean.FALSE);
         orderRecordsPO.setOrderStatus(OrderStatusEnum.PAY_NO.getCode());
-        orderRecordsPO.setCreateTime(new Date());
+        orderRecordsPO.setCreateTime(now);
         orderRecordsPO.setComboType(requestVO.getType());
+        Calendar instance = Calendar.getInstance();
+        instance.setTime(now);
+        // TODO 订单失效时间 1 min
+        instance.add(Calendar.MINUTE, 1);
+        Date time = instance.getTime();
+        orderRecordsPO.setFailureTime(time);
         orderRecordsMapper.insert(orderRecordsPO);
         // 将订单缓存在redis中
         redisUtil.set(
@@ -154,7 +161,9 @@ public class VpnService {
             if (o == null || StringUtil.isEmpty(o.toString())) {
                 orderRecordsMapper.update(null,
                         updateWrapper.eq(OrderRecordsPO::getOrderId, orderNo)
-                                .set(OrderRecordsPO::isDeleted, Boolean.TRUE).set(OrderRecordsPO::getUpdateTime, date));
+                                .set(OrderRecordsPO::isDeleted, Boolean.TRUE).set(OrderRecordsPO::getUpdateTime, date)
+                                .set(OrderRecordsPO::getOrderStatus,  OrderStatusEnum.PAY_TIMEOUT.getCode())
+                );
                 log.info("发现一条未支付已超时订单-已关闭， orderNo = {}\n", orderNo);
             }
         } else {
@@ -184,8 +193,42 @@ public class VpnService {
 
         // TODO 对帐
 
-        // TODO 返回成功
+        // TODO 关闭订单
 
+        // TODO 返回成功
+        orderRecordsMapper.update(null,
+                Wrappers.<OrderRecordsPO>lambdaUpdate().eq(OrderRecordsPO::getOrderId, orderRecordsPO.getOrderId())
+                        .set(OrderRecordsPO::getUpdateTime, new Date())
+                        .set(OrderRecordsPO::getOrderStatus, OrderStatusEnum.PAY_YES.getCode())
+                        .set(OrderRecordsPO::getPay, "支付宝")
+                        .set(OrderRecordsPO::isDeleted, Boolean.TRUE ));
         return Result.success("付款完成");
+    }
+
+    public Result<Map<String, Object>> getOrderStatus(String orderId) {
+        // 过期 或 已付款 或 已关闭 = false else true
+        OrderRecordsPO orderRecordsPO = orderRecordsMapper.selectOne(
+                Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, orderId));
+        // 超时
+        boolean cs = new Date().after(orderRecordsPO.getFailureTime());
+        System.err.println(orderRecordsPO.getOrderStatus() + "-------->");
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("status", orderRecordsPO.getOrderStatus());
+        map.put("zcgb", false);
+        if (!cs && orderRecordsPO.isDeleted() && !OrderStatusEnum.PAY_YES.getCode().equals(orderRecordsPO.getOrderStatus())) {
+            map.put("zcgb", true);
+        }
+        return Result.success(map);
+    }
+
+    public Result<List<OrderRecordsPO>> getMyOrderList() {
+        // 模拟userId
+        Long userId = 1L;
+        List<OrderRecordsPO> orderRecordsPOS = orderRecordsMapper.selectList(
+                Wrappers.<OrderRecordsPO>lambdaQuery()
+                        .eq(OrderRecordsPO::getUserId, userId)
+                        .eq(OrderRecordsPO::getOrderStatus, OrderStatusEnum.PAY_YES.getCode())
+                        .last(" limit 10").orderByDesc(OrderRecordsPO::getCreateTime));
+        return Result.success(orderRecordsPOS);
     }
 }

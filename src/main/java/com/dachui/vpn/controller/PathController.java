@@ -82,4 +82,15 @@ public class PathController {
     public String sourceError() {
         return "sourceError";
     }
+
+    @RequestMapping("/myOrder")
+    public String myOrder() {
+        return "myOrder";
+    }
+
+    @RequestMapping("/toPay")
+    public String toPay() {
+        return "redirectPay";
+    }
+
 }

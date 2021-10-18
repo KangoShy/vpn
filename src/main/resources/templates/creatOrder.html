@@ -142,7 +142,7 @@
 
 <main>
     <article>
-        <div style="text-align: center">
+        <div style="text-align: center" id="appendOrderStatus">
             <h3>待支付</h3>
             <h4>支付完成后，掌柜将快速为您处理订单</h4>
         </div>
@@ -163,7 +163,7 @@
         <h3>订单信息</h3>
         <h4 style="color: #605e5e">订单号：<span th:text="${orderId}"></span></h4>
         <h4 style="color: #605e5e">创建时间：<span th:text="${time}"></span></h4>
-        <button class="closeOrder" th:onclick="shutDownOrder([[${orderId}]], 1)">关闭订单</button>
+        <button class="closeOrder" id="closeOrderBtn" th:onclick="shutDownOrder([[${orderId}]], 1)">关闭订单</button>
         <button class="closeOrder" th:onclick="shutDownOrder([[${orderId}]], 2)">重新发起</button>
     </article>
 </main>
@@ -217,8 +217,56 @@
     });
 
     window.onload=function(){
-
+        a();
     };
+
+    let ddsx = false;
+    //订单状态
+    function a() {
+        setInterval(function() {
+            if (ddsx) return;
+            getOrderStatus();}, 1000);
+    }
+
+    function getOrderStatus() {
+        $.ajax({
+            url:'/vpn/getOrderStatus',
+            type:'GET',
+            data:{'orderId':'[[${orderId}]]'},
+            success:function(res) {
+                let append;
+                let data = res.data.status;
+                let zcgb = res.data.zcgb;
+                if (zcgb) {
+                    append = "<h3>订单已关闭！</h3>";
+                    document.getElementById("fk").setAttribute("disabled",true);
+                    document.getElementById("fk").style.backgroundColor = '#8d9094';
+                    document.getElementById("closeOrderBtn").setAttribute("disabled", true);
+                    document.getElementById("closeOrderBtn").style.backgroundColor = '#8d9094';
+                    ddsx = true;
+                    $("#appendOrderStatus").html(append);
+                    return;
+                }
+                if (data === '1') {
+                    append = "<h3>付款成功！</h3>";
+                    document.getElementById("fk").setAttribute("disabled",true);
+                    document.getElementById("fk").style.backgroundColor = '#8d9094';
+                    document.getElementById("closeOrderBtn").setAttribute("disabled", true);
+                    document.getElementById("closeOrderBtn").style.backgroundColor = '#8d9094';
+                    ddsx = true;
+                }
+                if (data === '2') {
+                    append = "<h3>已超时！</h3>";
+                    document.getElementById("fk").setAttribute("disabled",true);
+                    document.getElementById("fk").style.backgroundColor = '#8d9094';
+                    document.getElementById("closeOrderBtn").setAttribute("disabled", true);
+                    document.getElementById("closeOrderBtn").style.backgroundColor = '#8d9094';
+                    ddsx = true;
+                }
+                $("#appendOrderStatus").html(append);
+            }
+        })
+    }
 
     function invoicing(price, orderId) {
         // $.ajax({
@@ -249,7 +297,7 @@
         //         console.log(res);
         //     }
         // })
-        window.location.href = "/alipay/webPay";
+        window.location.href = "/toPay";
     }
 
     function shutDownOrder(orderId, val) {

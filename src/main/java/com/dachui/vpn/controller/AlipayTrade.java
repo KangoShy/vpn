@@ -6,6 +6,8 @@ import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.api.request.AlipayTradeRefundRequest;
 import com.alipay.api.request.AlipayTradeWapPayRequest;
 import com.alipay.api.response.AlipayTradeRefundResponse;
+import com.dachui.vpn.common.Result;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.springframework.ui.Model;
 import com.dachui.vpn.config.AlipayConfig;
 import com.dachui.vpn.util.SignUtil;
@@ -40,7 +42,8 @@ public class AlipayTrade {
      * @return web支付的表单
      */
     @RequestMapping("/webPay")
-    public String TradeWapPayRequest(Model model) {
+    @ResponseBody
+    public Result<?> TradeWapPayRequest() {
         Map<String, String> sParaTemp = new HashMap<>();
         AlipayTradeWapPayRequest alipayRequest = new AlipayTradeWapPayRequest();
         alipayRequest.setReturnUrl(AlipayConfig.RETURN_URL);//前台回调地址
@@ -50,8 +53,8 @@ public class AlipayTrade {
         sParaTemp.put("out_trade_no", getOrderIdByTime());//订单号(唯一）注意（Test）：这一单已付款，再掉起支付时会报此订单已支付。那么就得换个订单号，索性搞个生成订单号方法函数
         sParaTemp.put("total_amount", "0.01");//订单金额:0.01元，精准到分
         sParaTemp.put("subject", "商品下单");//订单标题
-        // sParaTemp.put("product_code", "QUICK_WAP_PAY");//手机网页支付
-        sParaTemp.put("body", "牛奶泡澡，尽显奢侈，嗷里个嗷！只需0.01");//没看到在哪显示了，搞了再说。
+        sParaTemp.put("product_code", "QUICK_WAP_PAY");//手机网页支付
+        sParaTemp.put("body", "");//没看到在哪显示了，搞了再说。
         alipayRequest.setBizContent(JSON.toJSONString(sParaTemp));//
         String form = "";
         try {
@@ -60,8 +63,7 @@ public class AlipayTrade {
             logger.error("支付宝构造表单失败", e);
         }
         logger.debug("支付宝支付表单构造:" + form);
-        model.addAttribute("form", form);
-        return "redirectPay";
+        return Result.success(form);
     }
 
     /**

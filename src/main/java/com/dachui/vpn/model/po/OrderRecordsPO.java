@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.dachui.vpn.model.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
@@ -33,8 +35,11 @@ public class OrderRecordsPO extends BaseEntity {
     private String orderStatus;
     @TableField("pay")
     private String pay;
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     @TableField("pay_time")
     private Date payTime;
     @TableField("price")
     private Long price;
+    @TableField("failure_time")
+    private Date failureTime;
 }
