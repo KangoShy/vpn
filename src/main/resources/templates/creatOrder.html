@@ -182,7 +182,7 @@
         <br>
         <h3 style="color: #8183a8">总计</h3>
         <h1>￥<span id="zjje" th:text="${price}"></span>.00 CNY</h1>
-        <button id="fk" th:onclick="invoicing([[${price}]],[[${orderId}]])" class="xdBtn">付款</button>
+        <button id="fk" th:onclick="invoicing([[${orderId}]])" class="xdBtn">付款</button>
     </article>
 </main>
 
@@ -268,36 +268,8 @@
         })
     }
 
-    function invoicing(price, orderId) {
-        // $.ajax({
-        //     url:'/vpn/pay',
-        //     type: 'POST',
-        //     dataType:'json',
-        //     contentType: 'application/json; charset=UTF-8',
-        //     data:JSON.stringify({'price':price, 'orderId': orderId}),
-        //     success:function(res) {
-        //         let code = res.code;
-        //         if (code === "0000") {
-        //             alert("支付成功！");
-        //             // TODO 跳转我的订单页面
-        //         }else{
-        //             alert(res.message);
-        //             window.location.href="/toIndex";
-        //         }
-        //     }
-        // })
-        // /////////////////////////
-        // $.ajax({
-        //     url:'/alipay/webPay',
-        //     type: 'POST',
-        //     dataType:'json',
-        //     //contentType: 'application/json; charset=UTF-8',
-        //     //data:JSON.stringify({'price':price, 'orderId': orderId}),
-        //     success:function(res) {
-        //         console.log(res);
-        //     }
-        // })
-        window.location.href = "/toPay";
+    function invoicing(orderId) {
+        window.location.href = "/toPay?orderId=" + orderId;
     }
 
     function shutDownOrder(orderId, val) {

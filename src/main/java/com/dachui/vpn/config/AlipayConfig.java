@@ -29,15 +29,15 @@ public class AlipayConfig {
     /**
      * 成功付款回调
      */
-    public static String PAY_NOTIFY = "http://c5129413.ngrok.io/alipay/pay";//验签
+    public static String PAY_NOTIFY = "http://localhost:8080/alipay/pay";//验签
     /**
      * 支付成功回调
      */
-    public static String REFUND_NOTIFY = "";//姑且没用到
+    public static String REFUND_NOTIFY = "http://localhost:8080/alipay/pay";//姑且没用到
     /**
      * 前台通知地址
      */
-    public static String RETURN_URL = "http://c5129413.ngrok.io/alipay/index";//支付成功后返回哪个前端页面
+    public static String RETURN_URL = "http://localhost:8080/myOrder";//支付成功后返回哪个前端页面
     /**
      * 参数类型
      */
@@ -53,7 +53,7 @@ public class AlipayConfig {
     /**
      * 支付宝开发平台中的支付宝账号（企业）
      */
-    public static final String SELLER_ID = "";
+    public static final String SELLER_ID = "anwhou5611@sandbox.com";
 
     //签名算法类型(根据生成私钥的算法,RSA2或RSA)
     public static final String SIGNTYPE = "RSA2";

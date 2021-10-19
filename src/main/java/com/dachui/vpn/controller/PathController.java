@@ -1,5 +1,6 @@
 package com.dachui.vpn.controller;
 
+import com.dachui.vpn.model.po.OrderRecordsPO;
 import com.dachui.vpn.model.po.VpnComboPO;
 import com.dachui.vpn.service.VpnService;
 import org.springframework.stereotype.Controller;
@@ -89,7 +90,8 @@ public class PathController {
     }
 
     @RequestMapping("/toPay")
-    public String toPay() {
+    public String toPay(String orderId, Model model) {
+        model.addAttribute("orderId", orderId);
         return "redirectPay";
     }
 

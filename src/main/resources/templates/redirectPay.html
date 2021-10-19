@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <script src="../static/js/jquery-1.11.0.min.js" type="text/javascript"></script>
@@ -15,8 +15,10 @@
 
     function pay() {
         $.ajax({
-            url:'/alipay/webPay',
-            type:'GET',
+            url:'/vpn/pay',
+            type:'POST',
+            contentType: 'application/json; charset=UTF-8',
+            data:JSON.stringify({'orderId':'[[${orderId}]]'}),
             success:function(res) {
                 $("#txt").html(res.message);
             }
