@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -20,6 +20,9 @@
 
 </head>
 <style>
+    .tc {
+        text-align: center;
+    }
 
     .tc h3 {
         color: black;
@@ -31,46 +34,18 @@
     .tc h2 {
         color: orangered;
         text-align: center;
-        line-height: 3px;
+        line-height: 20px;
     }
-    .yhqBtn{
-        width: 20%;
-        height: auto;
-        background-color: #0665d0;
-        color: white;
-        outline: none;
-        border-radius: 5%;
-        border: 0;
-        margin-left: 75%;
-        font-size: 17px;
-    }
-    main article h4 span {
-        color: white;
-    }
-    main article h4 strong {
-        color: white;
-    }
-    main article h1 {
-        color: white;
-    }
-    .xdBtn{
-        background-color: #0665d0;
-        width: 100%;
-        height: auto;
-        color: white;
+
+    .dyBtn {
         outline: none;
         border: 0;
-        font-size: 20px;
-        border-radius: 3px;
-        line-height: 45px;
-    }
-    .fkLx{
+        background: dodgerblue;
+        color: white;
+        padding: 4px;
+        align-content: center;
         border-radius: 5px;
-        border: 0;
-        background-color: white;
-        color: black;
-        outline: none;
-        width: 100%;
+        margin-bottom: 5px;
     }
 </style>
 <body>
@@ -124,8 +99,8 @@
         <li><span class="item-icon"> <i class="zmdi zmdi-keyboard"></i> </span> <a href="#1">
             操作指南 </a></li>
 
-        <li><span class="item-icon"> <i class="zmdi zmdi-dock"></i> </span> <a href="#1">
-            关于我们 </a></li>
+        <li><span class="item-icon"> <i class="zmdi zmdi-dock"></i> </span> <a href="/myOrder">
+            我的订单 </a></li>
 
 
         <li><span class="item-icon"> <i class="zmdi zmdi-mouse"></i> </span> <a href="/customerService">
@@ -139,8 +114,9 @@
 
 <!--End jSide Menu-->
 <!--Introduction and Demo Only -->
-<br><br>
+<br>
 <header class="intro">
+    <span id="combo"></span>
     <!--<h1>jquery滑动侧边栏插件jSide</h1>
     <div class="htmleaf-links">
       <a class="htmleaf-icon icon-htmleaf-home-outline" href="http://www.htmleaf.com/" title="jQuery之家" target="_blank"><span> jQuery之家</span></a>
@@ -157,53 +133,9 @@
 
 <main>
     <article>
-        <h3 th:text="${comboPO.comboName}"></h3>
-        <h4 style="padding: 5px" th:text="${comboPO.getComboDescribe()}"></h4>
+        <div id="myOrder"></div>
     </article>
 </main>
-
-<main>
-    <article>
-        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPrice}+',1)' "  class="fkLx">月付 <span th:text="${comboPO.getComboPrice()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
-    </article>
-</main>
-<main>
-    <article>
-        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPriceQuarter}+',2)' " class="fkLx">季付 <span th:text="${comboPO.getComboPriceQuarter()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
-    </article>
-</main>
-<main>
-    <article>
-        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPriceHalfYear}+',3)' " class="fkLx">半年付 <span th:text="${comboPO.getComboPriceHalfYear()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
-    </article>
-</main>
-<main>
-    <article>
-        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPriceYear}+',4)' " class="fkLx">年付 <span th:text="${comboPO.getComboPriceYear()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
-    </article>
-</main>
-
-<main style="background: rgb(52 55 60);color: white">
-    <article>
-        <div>
-            <strong>您有一张优惠券可减15元！</strong>
-            <button class="yhqBtn">去使用</button>
-        </div>
-    </article>
-</main>
-
-<main style="background: rgb(52 55 60);color: white">
-    <article>
-        <h4><strong>订单总额</strong></h4>
-        <h4><span th:text="${comboPO.comboName}"></span> x <span id="pjfkfs">月付</span></h4>
-        <hr/>
-        <br>
-        <h3 style="color: #8183a8">总计</h3>
-        <h1>￥<span id="zjje" th:text="${comboPO.comboPrice}"></span>.00 CNY</h1>
-        <button th:onclick="placeOrder([[${comboPO.getId()}]],[[${comboPO.comboName}]])" class="xdBtn">下单</button>
-    </article>
-</main>
-
 <div class="htmleaf-container">
     <div class="related">
         <h6>
@@ -234,44 +166,34 @@
     });
 
     window.onload=function(){
-
+        getMyOrderList();
     };
 
-    function toChagePrice(x, val){
-        $("#zjje").html(x);
-        let v;
-        if (val === 1) {
-            v = "月付";
-        }else if (val === 2){
-            v = "季付";
-        }else if(val === 3) {
-            v = "半年付";
-        }else{
-            v = "年付";
-        }
-        $("#pjfkfs").html(v);
-    }
-
-    function placeOrder(id, name) {
-        let value = document.getElementById("zjje").innerText;
-        let type = document.getElementById("pjfkfs").innerText;
+    function getMyOrderList() {
         $.ajax({
-            url:'/vpn/placeTheOrder',
-            type: 'POST',
-            dataType:'json',
-            contentType: 'application/json; charset=UTF-8',
-            data:JSON.stringify({'comboId':id, 'comboName': name, 'price': value, 'type': type}),
+            url:'/vpn/getMyOrderList',
+            type:'GET',
             success:function(res) {
+                console.log(res);
                 let data = res.data;
-                let comboName = data.comboName;
-                let comboType = data.comboType;
-                let orderId = data.orderId;
-                let price = data.orderPrice;
-                let time = data.createTime;
-                window.location.href = "/creatOrder?comboName=" + comboName + "&comboType=" + comboType + "&orderId=" + orderId + "&time=" + time + "&price=" + price;
+                let x = "";
+
+                for (let i = 0; i < data.length; i++) {
+                    x += "<h3>" + data[i].comboName + "</h3><h4>" +
+                        "流水号：" + data[i].orderId + "</h4><h4>" +
+                        "付款方式：" + data[i].pay + "</h4><h4>" +
+                        "付款金额：" + data[i].price + "</h4><h4>" +
+                        "购买时间：" + data[i].createTime + "</h4>";
+                    x += "<hr/>"
+                }
+                $("#myOrder").html(x);
+            },
+            error:function() {
+                alert("查询失败！");
             }
         })
     }
+
 </script>
 </body>
 </html>

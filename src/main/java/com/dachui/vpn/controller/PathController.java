@@ -2,14 +2,10 @@ package com.dachui.vpn.controller;
 
 import com.dachui.vpn.model.po.OrderRecordsPO;
 import com.dachui.vpn.model.po.VpnComboPO;
-import com.dachui.vpn.model.vo.PlaceOrderRequestVO;
 import com.dachui.vpn.service.VpnService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
 
@@ -19,8 +15,15 @@ public class PathController {
     @Resource
     private VpnService vpnService;
 
+    @RequestMapping("/")
+    public String lll() {
+        System.err.println("进入login");
+        return "login";
+    }
+
     @RequestMapping("/toLogin")
-    public String getZrbLyLogin(){
+    public String toLogin() {
+        System.err.println("进入login");
         return "login";
     }
 
@@ -47,7 +50,7 @@ public class PathController {
     }
 
     @RequestMapping("/creatOrder")
-    public String creatOrder(String comboName, String comboType, String orderId, String time, String price ,Model model) {
+    public String creatOrder(String comboName, String comboType, String orderId, String time, String price, Model model) {
         model.addAttribute("comboName", comboName);
         model.addAttribute("comboType", comboType);
         model.addAttribute("orderId", orderId);
@@ -75,4 +78,21 @@ public class PathController {
     public String windowsCourse() {
         return "windows";
     }
+
+    @RequestMapping("/sourceError")
+    public String sourceError() {
+        return "sourceError";
+    }
+
+    @RequestMapping("/myOrder")
+    public String myOrder() {
+        return "myOrder";
+    }
+
+    @RequestMapping("/toPay")
+    public String toPay(String orderId, Model model) {
+        model.addAttribute("orderId", orderId);
+        return "redirectPay";
+    }
+
 }

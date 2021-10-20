@@ -34,7 +34,7 @@
     .tc h2 {
         color: orangered;
         text-align: center;
-        line-height: 3px;
+        line-height: 20px;
     }
 
     .dyBtn {
@@ -99,8 +99,8 @@
         <li><span class="item-icon"> <i class="zmdi zmdi-keyboard"></i> </span> <a href="#1">
             操作指南 </a></li>
 
-        <li><span class="item-icon"> <i class="zmdi zmdi-dock"></i> </span> <a href="#1">
-            关于我们 </a></li>
+        <li><span class="item-icon"> <i class="zmdi zmdi-dock"></i> </span> <a href="/myOrder">
+            我的订单 </a></li>
 
 
         <li><span class="item-icon"> <i class="zmdi zmdi-mouse"></i> </span> <a href="/customerService">
@@ -112,25 +112,17 @@
 </nav>
 <div class="dim-overlay"></div>
 
-<!--End jSide Menu-->
-<!--Introduction and Demo Only -->
+<br>
 <br>
 <header class="intro">
-    <span id="combo"></span>
-    <!--<h1>jquery滑动侧边栏插件jSide</h1>
-    <div class="htmleaf-links">
-      <a class="htmleaf-icon icon-htmleaf-home-outline" href="http://www.htmleaf.com/" title="jQuery之家" target="_blank"><span> jQuery之家</span></a>
-      <a class="htmleaf-icon icon-htmleaf-arrow-forward-outline" href="http://www.htmleaf.com/jQuery/Menu-Navigation/201810195376.html" title="返回下载页" target="_blank"><span> 返回下载页</span></a>
-  </div>
-    <p>
-     jSide Menu is a well designed, simple and clean side navigation menu with dropdowns.
-       <br />
-       <br />
-<b> Written in:</b><i> HTML, CSS, JS</i><br>
-        <b> Frameworks: </b> <i>  jQuery 3.3.1 &amp; Material-Design-Iconic-Font 2.0  </i>
-    </p>-->
-</header>
+    <div>
+        <picture>
+            <img style="max-width: 100%;height: auto;opacity: 1" src="../static/image/asif-mughal.jpg">
+        </picture>
+    </div>
 
+    <span id="combo"></span>
+</header>
 
 <main>
     <article>
@@ -188,7 +180,7 @@
             type: 'GET',
             async: true,
             dataType: 'json',
-            success:function(res) {
+            success: function (res) {
                 console.log(res);
                 if (res != null) {
                     let text = '<div class="slide-box">';
@@ -215,7 +207,7 @@
             type: 'GET',
             async: true,
             dataType: 'json',
-            success:function(res) {
+            success: function (res) {
                 console.log(res);
                 if (res != null) {
                     let text = '';
@@ -228,10 +220,20 @@
         })
     }
 
-
-    window.onload=function(){
-        getUserKnow();
-        getComboData();
+    window.onload = function () {
+        let x = false;
+        let urlhash = window.location.hash;
+        if (!urlhash.match("fromapp")){
+            if ((navigator.userAgent.match(/(iPhone|iPod|Android|ios|iPad)/i))){
+                x = true;
+            }
+        }
+        if (x) {
+            getUserKnow();
+            getComboData();
+        }else{
+            window.location.href = "/sourceError"
+        }
     };
 
 </script>

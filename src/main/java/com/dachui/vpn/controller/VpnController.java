@@ -1,5 +1,6 @@
 package com.dachui.vpn.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.dachui.vpn.common.Result;
 import com.dachui.vpn.model.po.OrderRecordsPO;
 import com.dachui.vpn.model.vo.PayRequestVO;
@@ -9,6 +10,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/vpn")
@@ -31,8 +35,15 @@ public class VpnController {
 
     /* 下单 */
     @PostMapping("/placeTheOrder")
+    @ExceptionHandler(ArithmeticException.class)
     public Result<OrderRecordsPO> placeTheOrder(@RequestBody PlaceOrderRequestVO requestVO) {
         return Result.success(vpnService.placeTheOrder(requestVO));
+    }
+
+    /* 获取订单状态 */
+    @GetMapping("/getOrderStatus")
+    public Result<Map<String, Object>> getOrderStatus(String orderId) {
+        return vpnService.getOrderStatus(orderId);
     }
 
     /* 关闭订单 */
@@ -46,5 +57,12 @@ public class VpnController {
     public Result<Object> pay(@RequestBody PayRequestVO payRequestVO) {
         return vpnService.pay(payRequestVO);
     }
+
+    /* 订单列表 */
+    @GetMapping("/getMyOrderList")
+    public Result<List<OrderRecordsPO>> getMyOrderList() {
+        return vpnService.getMyOrderList();
+    }
+
 
 }

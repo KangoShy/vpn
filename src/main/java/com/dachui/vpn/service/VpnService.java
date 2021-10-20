@@ -1,11 +1,19 @@
 package com.dachui.vpn.service;
 
+import com.alibaba.fastjson.JSON;
+import com.alipay.api.request.AlipayTradeWapPayRequest;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.dachui.vpn.common.Result;
 import com.dachui.vpn.common.UserInfoUtil;
+import com.dachui.vpn.config.AlipayConfig;
+import com.dachui.vpn.config.AroundException;
+import com.dachui.vpn.enums.OrderPayEnum;
 import com.dachui.vpn.enums.RedisConstantsKeyEnum;
 import com.dachui.vpn.enums.OrderStatusEnum;
+import com.dachui.vpn.enums.ReturnCodeStatusEnum;
+import com.dachui.vpn.model.BaseEntity;
 import com.dachui.vpn.model.po.OrderRecordsPO;
 import com.dachui.vpn.model.vo.ComboResultVO;
 import com.dachui.vpn.model.po.UserKnowPO;
@@ -16,12 +24,17 @@ import com.dachui.vpn.repository.OrderRecordsMapper;
 import com.dachui.vpn.repository.UserKnowMapper;
 import com.dachui.vpn.repository.VpnComboMapper;
 import com.dachui.vpn.util.RedisUtil;
+import com.dachui.vpn.util.StringUtil;
+import io.netty.util.HashedWheelTimer;
+import io.netty.util.Timeout;
+import io.netty.util.TimerTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -95,34 +108,78 @@ public class VpnService {
         }
         VpnComboPO vpnComboPO = selectComboById(comboId.toString());
         if (vpnComboPO == null) {
-            throw new RuntimeException("套餐不存在！");
+            throw new AroundException(ReturnCodeStatusEnum.SYSTEM_ERROR,"套餐不存在！");
         }
-        String orderNo = UUID.randomUUID().toString().replace("-", "");
+        String orderNo = AlipayHandler.getOrderIdByTime();
         OrderRecordsPO orderRecordsPO = new OrderRecordsPO();
-        Long userId = UserInfoUtil.getUserId();
-        orderRecordsPO.setUserId(userId);
+        Date now = new Date();
         orderRecordsPO.setComboId(vpnComboPO.getId());
+        // TODO 模拟userId
+        orderRecordsPO.setUserId(1L);
         orderRecordsPO.setComboName(vpnComboPO.getComboName());
         orderRecordsPO.setOrderId(orderNo);
         orderRecordsPO.setOrderPrice(requestVO.getPrice());
         orderRecordsPO.setPrice(requestVO.getPrice());
         orderRecordsPO.setDeleted(Boolean.FALSE);
         orderRecordsPO.setOrderStatus(OrderStatusEnum.PAY_NO.getCode());
-        orderRecordsPO.setCreateTime(new Date());
+        orderRecordsPO.setCreateTime(now);
         orderRecordsPO.setComboType(requestVO.getType());
+        Calendar instance = Calendar.getInstance();
+        instance.setTime(now);
+        // TODO 订单失效时间 1 min
+        instance.add(Calendar.MINUTE, 1);
+        Date time = instance.getTime();
+        orderRecordsPO.setFailureTime(time);
         orderRecordsMapper.insert(orderRecordsPO);
         // 将订单缓存在redis中
         redisUtil.set(
-                // "key = order::e562258e53964d7a8d4aa59afebb075f";
+                // "key = order::20211019150137589";
                 RedisConstantsKeyEnum.ORDER_CACHE_KEY.getKey().concat(orderNo),
                 orderRecordsPO,
                 RedisConstantsKeyEnum.ORDER_CACHE_KEY.getCacheTime()); // 失效时间
+        HashedWheelTimer timer = new HashedWheelTimer();
+        timer.newTimeout(
+                timeout -> syncOrderStatus(orderNo), RedisConstantsKeyEnum.getDescTime(), TimeUnit.SECONDS);
         return orderRecordsPO;
     }
+
+    private synchronized void syncOrderStatus(String orderNo) {
+        log.info("--------> 开始处理订单\n");
+        LambdaQueryWrapper<OrderRecordsPO> wrapper =
+                Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, orderNo).eq(OrderRecordsPO::isDeleted, Boolean.FALSE);
+        OrderRecordsPO orderPo = orderRecordsMapper.selectOne(wrapper);
+        if (orderPo != null) {
+            Date date = new Date();
+            LambdaUpdateWrapper<OrderRecordsPO> updateWrapper = Wrappers.lambdaUpdate();
+            // 无效订单/已付款订单-关闭
+            if (OrderStatusEnum.PAY_TIMEOUT.getCode().equals(orderPo.getOrderStatus())
+                    || OrderStatusEnum.PAY_YES.getCode().equals(orderPo.getOrderStatus())) {
+                orderRecordsMapper.update(null,
+                        updateWrapper.eq(OrderRecordsPO::getId, orderPo.getId())
+                                .set(OrderRecordsPO::isDeleted, Boolean.TRUE).set(OrderRecordsPO::getUpdateTime, date));
+                log.info("发现一条无效/已付款订单-已关闭， id = {}\n", orderPo.getId());
+                return;
+            }
+            // 从redis获取订单数据
+            Object o = redisUtil.get(RedisConstantsKeyEnum.ORDER_CACHE_KEY.getKey().concat(orderNo));
+            if (o == null || StringUtil.isEmpty(o.toString())) {
+                orderRecordsMapper.update(null,
+                        updateWrapper.eq(OrderRecordsPO::getOrderId, orderNo)
+                                .set(OrderRecordsPO::isDeleted, Boolean.TRUE).set(OrderRecordsPO::getUpdateTime, date)
+                                .set(OrderRecordsPO::getOrderStatus,  OrderStatusEnum.PAY_TIMEOUT.getCode())
+                );
+                log.info("发现一条未支付已超时订单-已关闭， orderNo = {}\n", orderNo);
+            }
+        } else {
+            log.info("该订单已经正常关闭，orderNo = {}\n", orderNo);
+        }
+    }
+
 
     public boolean closeOrder(String orderId) {
         int update = orderRecordsMapper.update(null,
                 Wrappers.<OrderRecordsPO>lambdaUpdate().eq(OrderRecordsPO::getOrderId, orderId)
+                        .set(OrderRecordsPO::isDeleted, Boolean.TRUE)
                         .set(OrderRecordsPO::getUpdateTime, new Date()));
         // 清空缓存订单数据
         if (update == 1)
@@ -130,18 +187,54 @@ public class VpnService {
         return update == 1;
     }
 
+    /** TODO 1、检查订单状态 2、付款 3、对账 4、发货 */
+
+    // 检查订单状态-付款
     public Result<Object> pay(PayRequestVO PayRequestVO) {
+        System.err.println("orderId = " + PayRequestVO.getOrderId());
         OrderRecordsPO orderRecordsPO = orderRecordsMapper.selectOne(
                 Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, PayRequestVO.getOrderId()));
-        if (orderRecordsPO.isDeleted()) {
-            return Result.fail("该订单未及时支付已超时，请重新下单");
+        if (orderRecordsPO == null || orderRecordsPO.isDeleted() || !OrderStatusEnum.PAY_NO.getCode().equals(orderRecordsPO.getOrderStatus())) {
+            return Result.fail("该订单已失效，请重新下单");
         }
-        // TODO 支付包付款
+        // 付款
+        return Result.success(AlipayHandler.TradeWapPayRequest(orderRecordsPO));
+    }
 
-        // TODO 对帐
+    /** 回调完参数后调用 */
 
-        // TODO 返回成功
+    public Result<Map<String, Object>> getOrderStatus(String orderId) {
+        // 过期 或 已付款 或 已关闭 = false else true
+        OrderRecordsPO orderRecordsPO = orderRecordsMapper.selectOne(
+                Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, orderId));
+        // 超时
+        if (orderRecordsPO == null) {
+            return Result.success(new HashMap<>());
+        }
+        boolean cs = new Date().after(orderRecordsPO.getFailureTime());
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("status", orderRecordsPO.getOrderStatus());
+        map.put("zcgb", false);
+        if (!cs && orderRecordsPO.isDeleted() && !OrderStatusEnum.PAY_YES.getCode().equals(orderRecordsPO.getOrderStatus())) {
+            map.put("zcgb", true);
+        }
+        return Result.success(map);
+    }
 
-        return Result.success("付款完成");
+    public Result<List<OrderRecordsPO>> getMyOrderList() {
+        // 模拟userId
+        Long userId = 1L;
+        List<OrderRecordsPO> orderRecordsPOS = orderRecordsMapper.selectList(
+                Wrappers.<OrderRecordsPO>lambdaQuery()
+                        .eq(OrderRecordsPO::getUserId, userId)
+                        .eq(OrderRecordsPO::getOrderStatus, OrderStatusEnum.PAY_YES.getCode())
+                        .last(" limit 10").orderByDesc(OrderRecordsPO::getCreateTime));
+        return Result.success(orderRecordsPOS);
+    }
+
+    public OrderRecordsPO getOrderById(String orderId) {
+        OrderRecordsPO orderRecordsPO = orderRecordsMapper.selectOne(
+                Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, orderId).eq(BaseEntity::isDeleted, Boolean.FALSE).eq(OrderRecordsPO::getOrderStatus, OrderStatusEnum.PAY_NO));
+        return orderRecordsPO == null ? new OrderRecordsPO() : orderRecordsPO;
     }
 }
