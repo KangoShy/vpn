@@ -20,7 +20,9 @@
             contentType: 'application/json; charset=UTF-8',
             data:JSON.stringify({'orderId':'[[${orderId}]]'}),
             success:function(res) {
-                $("#txt").html(res.message);
+                alert("付款完成");
+                //$("#txt").html(res.message);
+                window.location.href = "/myOrder"
             }
         });
     }

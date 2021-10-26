@@ -1,18 +1,15 @@
 package com.dachui.vpn.controller;
 
-import com.alibaba.fastjson.JSONObject;
 import com.dachui.vpn.common.Result;
 import com.dachui.vpn.model.po.OrderRecordsPO;
 import com.dachui.vpn.model.vo.PayRequestVO;
 import com.dachui.vpn.model.vo.PlaceOrderRequestVO;
 import com.dachui.vpn.service.VpnService;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
-import java.util.List;
 
 @RestController
 @RequestMapping("/vpn")

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.dachui.vpn.model.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,7 +16,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @TableName(value = "user_center")
-public class UcenterMember {
+public class UcenterMember extends BaseEntity {
 
     @TableId(value = "user_id",type = IdType.AUTO)
     private String userId;
@@ -31,7 +32,4 @@ public class UcenterMember {
     private String userAge;
     @TableField(value = "user_type")
     private String userType;
-    @TableField(value = "deleted")
-    private Boolean deleted;
-
 }

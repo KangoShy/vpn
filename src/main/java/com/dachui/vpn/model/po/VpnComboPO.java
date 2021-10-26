@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.dachui.vpn.model.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,7 +14,7 @@ import java.util.Date;
 @Getter
 @Setter
 @TableName("vpn_combo")
-public class VpnComboPO {
+public class VpnComboPO extends BaseEntity {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
@@ -48,13 +49,4 @@ public class VpnComboPO {
 
     @TableField("vpn_config")
     private String vpnConfig;
-
-    @TableField("deleted")
-    private boolean deleted;
-
-    @TableField("create_time")
-    private Date createTime;
-
-    @TableField("update_time")
-    private Date updateTime;
 }

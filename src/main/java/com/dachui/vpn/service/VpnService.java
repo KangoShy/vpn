@@ -133,18 +133,19 @@ public class VpnService {
         orderRecordsMapper.insert(orderRecordsPO);
         // 将订单缓存在redis中
         redisUtil.set(
-                // "key = order::20211019150137589";
                 RedisConstantsKeyEnum.ORDER_CACHE_KEY.getKey().concat(orderNo),
                 orderRecordsPO,
-                RedisConstantsKeyEnum.ORDER_CACHE_KEY.getCacheTime()); // 失效时间
+                // 失效时间
+                RedisConstantsKeyEnum.ORDER_CACHE_KEY.getCacheTime());
         HashedWheelTimer timer = new HashedWheelTimer();
+        // 延时队列
         timer.newTimeout(
                 timeout -> syncOrderStatus(orderNo), RedisConstantsKeyEnum.getDescTime(), TimeUnit.SECONDS);
         return orderRecordsPO;
     }
 
     private synchronized void syncOrderStatus(String orderNo) {
-        log.info("--------> 开始处理订单\n");
+        log.info("--------> 开始处理订单：{}\n", orderNo);
         LambdaQueryWrapper<OrderRecordsPO> wrapper =
                 Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, orderNo).eq(OrderRecordsPO::isDeleted, Boolean.FALSE);
         OrderRecordsPO orderPo = orderRecordsMapper.selectOne(wrapper);
@@ -175,11 +176,11 @@ public class VpnService {
         }
     }
 
-
     public boolean closeOrder(String orderId) {
         int update = orderRecordsMapper.update(null,
                 Wrappers.<OrderRecordsPO>lambdaUpdate().eq(OrderRecordsPO::getOrderId, orderId)
                         .set(OrderRecordsPO::isDeleted, Boolean.TRUE)
+                        .set(OrderRecordsPO::getOrderStatus, OrderStatusEnum.PAY_OUT.getCode())
                         .set(OrderRecordsPO::getUpdateTime, new Date()));
         // 清空缓存订单数据
         if (update == 1)
@@ -197,8 +198,15 @@ public class VpnService {
         if (orderRecordsPO == null || orderRecordsPO.isDeleted() || !OrderStatusEnum.PAY_NO.getCode().equals(orderRecordsPO.getOrderStatus())) {
             return Result.fail("该订单已失效，请重新下单");
         }
-        // 付款
-        return Result.success(AlipayHandler.TradeWapPayRequest(orderRecordsPO));
+        // TODO 付款
+        //return Result.success(AlipayHandler.TradeWapPayRequest(orderRecordsPO));
+        orderRecordsMapper.update(null,
+                Wrappers.<OrderRecordsPO>lambdaUpdate().eq(OrderRecordsPO::getOrderId, orderRecordsPO.getOrderId())
+                        .set(OrderRecordsPO::getUpdateTime, new Date())
+                        .set(OrderRecordsPO::getOrderStatus, OrderStatusEnum.PAY_YES.getCode())
+                        .set(OrderRecordsPO::getPay, "支付宝")
+                        .set(OrderRecordsPO::isDeleted, Boolean.TRUE ));
+        return Result.success("付款完成");
     }
 
     /** 回调完参数后调用 */
@@ -227,8 +235,12 @@ public class VpnService {
         List<OrderRecordsPO> orderRecordsPOS = orderRecordsMapper.selectList(
                 Wrappers.<OrderRecordsPO>lambdaQuery()
                         .eq(OrderRecordsPO::getUserId, userId)
-                        .eq(OrderRecordsPO::getOrderStatus, OrderStatusEnum.PAY_YES.getCode())
                         .last(" limit 10").orderByDesc(OrderRecordsPO::getCreateTime));
+        if (!orderRecordsPOS.isEmpty()) {
+            for (OrderRecordsPO orderPO : orderRecordsPOS) {
+                orderPO.setOrderStatus(OrderStatusEnum.getMessageByCode(orderPO.getOrderStatus()));
+            }
+        }
         return Result.success(orderRecordsPOS);
     }
 

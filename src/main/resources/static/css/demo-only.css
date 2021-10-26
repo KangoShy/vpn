@@ -15,7 +15,7 @@
 /*}*/
 
 body {
-    font-family: 'Helvetica Neue';
+    font-family: '苹方';
     font-style: normal;
     font-weight: 300;
     font-smoothing: antialiased;
@@ -26,7 +26,7 @@ body {
 }
 
 .intro {
-    background-image: url("image/asif-mughal.jpg");
+    /*background-image: url("../image/asif-mughal.jpg");*/
     padding: 20px 20px;
     color: #333;
     margin-bottom: -30px;
