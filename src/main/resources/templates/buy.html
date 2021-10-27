@@ -79,7 +79,7 @@
     </menuitem>
 
     <menuitem class="logo" title="Your Logo Goes Here">
-        <h6>天下数据</h6>
+        <h6>创建订单</h6>
     </menuitem>
 </menu>
 
@@ -157,28 +157,28 @@
 <main>
     <article>
         <h3 th:text="${comboPO.comboName}"></h3>
-        <h4 style="padding: 5px" th:text="${comboPO.getComboDescribe()}"></h4>
+        <h4 style="padding: 5px" th:text="${comboPO.comboDescribe}"></h4>
     </article>
 </main>
 
 <main>
     <article>
-        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPrice}+',1)' "  class="fkLx">月付 <span th:text="${comboPO.getComboPrice()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
+        <button th:onclick="'javascript:toChagePrice('+${comboPO.comboPrice}+',1)' "  class="fkLx">月付 <span th:text="${comboPO.comboPrice}"></span>/<span th:text="${comboPO.comboUnit}"></span></button>
     </article>
 </main>
 <main>
     <article>
-        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPriceQuarter}+',2)' " class="fkLx">季付 <span th:text="${comboPO.getComboPriceQuarter()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
+        <button th:onclick="'javascript:toChagePrice('+${comboPO.comboPriceQuarter}+',2)' " class="fkLx">季付 <span th:text="${comboPO.comboPriceQuarter}"></span>/<span th:text="${comboPO.comboUnit}"></span></button>
     </article>
 </main>
 <main>
     <article>
-        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPriceHalfYear}+',3)' " class="fkLx">半年付 <span th:text="${comboPO.getComboPriceHalfYear()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
+        <button th:onclick="'javascript:toChagePrice('+${comboPO.comboPriceHalfYear}+',3)' " class="fkLx">半年付 <span th:text="${comboPO.comboPriceHalfYear}"></span>/<span th:text="${comboPO.comboUnit}"></span></button>
     </article>
 </main>
 <main>
     <article>
-        <button th:onclick="'javascript:toChagePrice('+${comboPO.getComboPriceYear}+',4)' " class="fkLx">年付 <span th:text="${comboPO.getComboPriceYear()}"></span>/<span th:text="${comboPO.getComboUnit()}"></span></button>
+        <button th:onclick="'javascript:toChagePrice('+${comboPO.comboPriceYear}+',4)' " class="fkLx">年付 <span th:text="${comboPO.comboPriceYear}"></span>/<span th:text="${comboPO.comboUnit}"></span></button>
     </article>
 </main>
 

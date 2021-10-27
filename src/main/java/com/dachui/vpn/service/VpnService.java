@@ -1,15 +1,11 @@
 package com.dachui.vpn.service;
 
-import com.alibaba.fastjson.JSON;
-import com.alipay.api.request.AlipayTradeWapPayRequest;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.dachui.vpn.common.Result;
-import com.dachui.vpn.common.UserInfoUtil;
-import com.dachui.vpn.config.AlipayConfig;
 import com.dachui.vpn.config.AroundException;
-import com.dachui.vpn.enums.OrderPayEnum;
 import com.dachui.vpn.enums.RedisConstantsKeyEnum;
 import com.dachui.vpn.enums.OrderStatusEnum;
 import com.dachui.vpn.enums.ReturnCodeStatusEnum;
@@ -26,8 +22,6 @@ import com.dachui.vpn.repository.VpnComboMapper;
 import com.dachui.vpn.util.RedisUtil;
 import com.dachui.vpn.util.StringUtil;
 import io.netty.util.HashedWheelTimer;
-import io.netty.util.Timeout;
-import io.netty.util.TimerTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -108,7 +102,7 @@ public class VpnService {
         }
         VpnComboPO vpnComboPO = selectComboById(comboId.toString());
         if (vpnComboPO == null) {
-            throw new AroundException(ReturnCodeStatusEnum.SYSTEM_ERROR,"套餐不存在！");
+            throw new AroundException(ReturnCodeStatusEnum.SYSTEM_ERROR, "套餐不存在！");
         }
         String orderNo = AlipayHandler.getOrderIdByTime();
         OrderRecordsPO orderRecordsPO = new OrderRecordsPO();
@@ -167,7 +161,7 @@ public class VpnService {
                 orderRecordsMapper.update(null,
                         updateWrapper.eq(OrderRecordsPO::getOrderId, orderNo)
                                 .set(OrderRecordsPO::isDeleted, Boolean.TRUE).set(OrderRecordsPO::getUpdateTime, date)
-                                .set(OrderRecordsPO::getOrderStatus,  OrderStatusEnum.PAY_TIMEOUT.getCode())
+                                .set(OrderRecordsPO::getOrderStatus, OrderStatusEnum.PAY_TIMEOUT.getCode())
                 );
                 log.info("发现一条未支付已超时订单-已关闭， orderNo = {}\n", orderNo);
             }
@@ -188,7 +182,9 @@ public class VpnService {
         return update == 1;
     }
 
-    /** TODO 1、检查订单状态 2、付款 3、对账 4、发货 */
+    /**
+     * TODO 1、检查订单状态 2、付款 3、对账 4、发货
+     */
 
     // 检查订单状态-付款
     public Result<Object> pay(PayRequestVO PayRequestVO) {
@@ -205,11 +201,13 @@ public class VpnService {
                         .set(OrderRecordsPO::getUpdateTime, new Date())
                         .set(OrderRecordsPO::getOrderStatus, OrderStatusEnum.PAY_YES.getCode())
                         .set(OrderRecordsPO::getPay, "支付宝")
-                        .set(OrderRecordsPO::isDeleted, Boolean.TRUE ));
+                        .set(OrderRecordsPO::isDeleted, Boolean.TRUE));
         return Result.success("付款完成");
     }
 
-    /** 回调完参数后调用 */
+    /**
+     * 回调完参数后调用
+     */
 
     public Result<Map<String, Object>> getOrderStatus(String orderId) {
         // 过期 或 已付款 或 已关闭 = false else true
@@ -229,13 +227,20 @@ public class VpnService {
         return Result.success(map);
     }
 
-    public Result<List<OrderRecordsPO>> getMyOrderList() {
+    public Result<List<OrderRecordsPO>> getMyOrderList(String key, Integer pageSize) {
         // 模拟userId
         Long userId = 1L;
-        List<OrderRecordsPO> orderRecordsPOS = orderRecordsMapper.selectList(
-                Wrappers.<OrderRecordsPO>lambdaQuery()
-                        .eq(OrderRecordsPO::getUserId, userId)
-                        .last(" limit 10").orderByDesc(OrderRecordsPO::getCreateTime));
+        if (pageSize >= 100) {
+            pageSize = 100;
+        }
+        LambdaQueryWrapper<OrderRecordsPO> pages = Wrappers.<OrderRecordsPO>lambdaQuery()
+                .eq(OrderRecordsPO::getUserId, userId)
+                .and(StringUtils.isNotEmpty(key), i -> i.like(OrderRecordsPO::getOrderId, key)
+                        .or().like(OrderRecordsPO::getComboName, key)
+                )
+                .last(" limit " + pageSize)
+                .orderByDesc(OrderRecordsPO::getCreateTime);
+        List<OrderRecordsPO> orderRecordsPOS = orderRecordsMapper.selectList(pages);
         if (!orderRecordsPOS.isEmpty()) {
             for (OrderRecordsPO orderPO : orderRecordsPOS) {
                 orderPO.setOrderStatus(OrderStatusEnum.getMessageByCode(orderPO.getOrderStatus()));

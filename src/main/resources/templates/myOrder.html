@@ -39,6 +39,15 @@
     h4 {
         color: #595757;
     }
+
+    .submit{
+        border: 0;
+        color: white;
+        width: 20%;
+        height: 40px;
+        float: left;
+        background: #df0e62;
+    }
 </style>
 <body>
 <menu class="menubar">
@@ -47,7 +56,7 @@
     </menuitem>
 
     <menuitem class="logo" title="Your Logo Goes Here">
-        <h6>天下数据</h6>
+        <h6>订单列表</h6>
     </menuitem>
 </menu>
 
@@ -124,11 +133,15 @@
 </header>
 
 <br/>
+
 <main>
     <article>
-        <div id="myOrder"></div>
+        <input type="text" id="input"  style="width: 70%;outline: none;line-height: 30px;border-left: none; border-top: none;border-right: none;" placeholder="输入套餐名或订单号进行查询" >
+        <input type="button" value="查 询" style="width: 28%;outline: none;background-color: dodgerblue;color: white;border: none;line-height: 35px" onclick="findByKeyWord()"/>
     </article>
 </main>
+
+<div id="myOrders"></div>
 
 <script src="../static/js/jquery-1.11.0.min.js" type="text/javascript"></script>
 <script src="../static/js/jquery.jside.menu.js"></script>
@@ -146,42 +159,78 @@
     });
 
     window.onload=function(){
-        getMyOrderList();
+        getMyOrderList(0,'',6);
     };
 
-    function getMyOrderList() {
+    function findByKeyWord(){
+        let key = document.getElementById("input").value;
+        getMyOrderList(1, key, 6);
+    }
+
+    let i = 0;
+    let c = "";
+    $(window).scroll(
+        function() {
+            var scrollTop = $(this).scrollTop();
+            var scrollHeight = $(document).height();
+            var windowHeight = $(this).height();
+            if (scrollTop + windowHeight === scrollHeight) {
+                i = i + 6;
+                if (c != "d"){
+                    getMyOrderList(1,"", i + 6); //每次加载5条
+                }
+            }
+        }
+    );
+
+    function getMyOrderList(flag,key,size) {
         $.ajax({
             url:'/vpn/getMyOrderList',
+            data:{'key' : key, 'pageSize': size},
             type:'GET',
             success:function(res) {
-                console.log(res);
+                if (flag === 1){
+                    $("#myOrders").empty();
+                }
                 let data = res.data;
                 let x = "";
-
-                for (let i = 0; i < data.length; i++) {
-                    let x1 =  "<h3>" + data[i].comboName + "</h3><h4>" + "订单号：" + data[i].orderId + "</h4>";
-                    let x2 = "";
-                    let x4 = "";
-                    if (data[i].orderStatus === "待付款") {
-                        x2 = "<h4>付款方式：" + "--" + "</h4><h4>" + "应付金额：" + data[i].price + "</h4>";
-                        x4 = "<h4>订单状态：<span style='color: cornflowerblue'>" + data[i].orderStatus + "</span></h4>"
+                if (data != null && data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        let start = "<main><article>"
+                        let x1 =  "<h3>" + data[i].comboName + "</h3><h4>" + "订单编号：" + data[i].orderId + "</h4>";
+                        let x2 = "";
+                        let x4 = "";
+                        if (data[i].orderStatus === "待付款") {
+                            x2 = "<h4>付款方式：" + "--" + "</h4><h4>" + "应付金额：" + data[i].price + "</h4>";
+                            x4 = "<h4>订单状态：<span style='color: cornflowerblue'>" + data[i].orderStatus + "</span></h4>";
+                        }
+                        else if (data[i].orderStatus === "已付款") {
+                            x2 = "<h4>付款方式：" + data[i].pay + "</h4><h4>" + "付款金额：" + data[i].price + "</h4>";
+                            x4 = "<h4>订单状态：<span style='color: mediumseagreen'>" + data[i].orderStatus + "</span></h4>";
+                        }
+                        else if (data[i].orderStatus === "已超时" || data[i].orderStatus === "已关闭"){
+                            x2 = "<h4>付款方式：" + "--" + "</h4><h4>" + "应付金额：" + data[i].price + "</h4>";
+                            x4 = "<h4>订单状态：<span style='color: red'>" + data[i].orderStatus + "</span></h4>";
+                        }
+                        let x3 = "<h4>套餐类型：" + data[i].comboType + "</h4>";
+                        let x5 = "<h4>下单时间：" + data[i].createTime + "</h4>";
+                        let end = "</article></main>";
+                        x += start + x1 + x2 + x3 + x4 + x5 + end;
                     }
-                    else if (data[i].orderStatus === "已付款") {
-                        x2 = "<h4>付款方式：" + data[i].pay + "</h4><h4>" + "付款金额：" + data[i].price + "</h4>";
-                        x4 = "<h4>订单状态：<span style='color: mediumseagreen'>" + data[i].orderStatus + "</span></h4>"
+                    if (i >= data.length) {
+                        c = "d";
+                        x += "<h4 style='text-align: center'>别划了，已经到底啦~</h4>";
                     }
-                    else if (data[i].orderStatus === "已超时" || data[i].orderStatus === "已关闭"){
-                        x2 = "<h4>付款方式：" + "--" + "</h4><h4>" + "应付金额：" + data[i].price + "</h4>";
-                        x4 = "<h4>订单状态：<span style='color: red'>" + data[i].orderStatus + "</span></h4>"
-                    }
-                    let x3 = "<h4>套餐类型：" + data[i].comboType + "</h4>"
-                    let x5 = "<h4>下单时间：" + data[i].createTime + "</h4>";
-                    x += x1 + x2 + x3 + x4 + x5 + "<hr/>"
+                }else{
+                    let error = "<main><article><h4 style='text-align: center'>暂无数据</h4></article></main>";
+                    $("#myOrders").html(error);
+                    return;
                 }
-                $("#myOrder").html(x);
+                $("#myOrders").html(x);
             },
             error:function() {
-                alert("查询失败！");
+                let error = "<main><article><h4 style='text-align: center'>暂无数据</h4></article></main>";
+                $("#myOrders").html(error);
             }
         })
     }

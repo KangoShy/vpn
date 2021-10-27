@@ -1,7 +1,5 @@
 package com.dachui.vpn.common;
 
-import com.dachui.vpn.common.UserInfoUtil;
-import com.dachui.vpn.controller.PathController;
 import com.dachui.vpn.model.UserInfo;
 import com.dachui.vpn.util.StringUtil;
 import com.dachui.vpn.util.TokenUtils;
@@ -13,7 +11,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 /**
  * @Author: Zhouruibin

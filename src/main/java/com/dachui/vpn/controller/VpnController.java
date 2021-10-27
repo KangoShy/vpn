@@ -57,8 +57,8 @@ public class VpnController {
 
     /* 订单列表 */
     @GetMapping("/getMyOrderList")
-    public Result<List<OrderRecordsPO>> getMyOrderList() {
-        return vpnService.getMyOrderList();
+    public Result<List<OrderRecordsPO>> getMyOrderList(String key, Integer pageSize) {
+        return vpnService.getMyOrderList(key, pageSize);
     }
 
 
