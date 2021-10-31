@@ -19,10 +19,6 @@
 
 </head>
 <style>
-    .tc {
-        text-align: center;
-    }
-
     .tc h3 {
         color: black;
         text-align: center;
@@ -38,16 +34,9 @@
 
     h4 {
         color: #595757;
+        margin-left: 5px;
     }
 
-    .submit{
-        border: 0;
-        color: white;
-        width: 20%;
-        height: 40px;
-        float: left;
-        background: #df0e62;
-    }
 </style>
 <body>
 <menu class="menubar">
@@ -107,6 +96,9 @@
         <li><span class="item-icon"> <i class="zmdi zmdi-mouse"></i> </span> <a href="/customerService">
             联系客服 </a></li>
 
+        <li><span class="item-icon"> <i class="zmdi zmdi-dock"></i> </span> <a href="/logout">
+            退出登录 </a></li>
+
     </ul>
 
 
@@ -136,8 +128,8 @@
 
 <main>
     <article>
-        <input type="text" id="input"  style="width: 70%;outline: none;line-height: 30px;border-left: none; border-top: none;border-right: none;" placeholder="输入套餐名或订单号进行查询" >
-        <input type="button" value="查 询" style="width: 28%;outline: none;background-color: dodgerblue;color: white;border: none;line-height: 35px" onclick="findByKeyWord()"/>
+        <input type="text" id="input"  style="width: 70%;border-radius: 0;outline: none;line-height: 30px;border-left: none; border-top: none;border-right: none;" placeholder="输入套餐名或订单号进行查询" >
+        <input type="button" value="查 询" style="width: 28%;border-radius: 0;outline: none;background-color: dodgerblue;color: white;border: none;line-height: 35px" onclick="findByKeyWord()"/>
     </article>
 </main>
 

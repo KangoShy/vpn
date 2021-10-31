@@ -6,6 +6,7 @@ import com.dachui.vpn.service.VpnService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
 
@@ -23,7 +24,11 @@ public class PathController {
 
     @RequestMapping("/toLogin")
     public String toLogin() {
-        System.err.println("进入login");
+        return "login";
+    }
+
+    @RequestMapping("/logout")
+    public String logout() {
         return "login";
     }
 

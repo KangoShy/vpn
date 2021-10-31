@@ -362,6 +362,15 @@ body{
   margin-right: auto;
    font-size: 22px;
 }
+
+.logo_right {
+    display: block;
+    text-align: right;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 22px;
+}
+
 .logo img{
    width: 130px;
    margin-top: 10px;

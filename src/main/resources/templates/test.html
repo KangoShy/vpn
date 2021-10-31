@@ -1,29 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>横向滑动</title>
-    <style type="text/css">
-        .slide-box{
-            margin-top: 200px;
-            display: -webkit-box;
-            overflow-x: scroll;
-            -webkit-overflow-scrolling:touch;
-        }
-        .slide-item{
-            width: 70%;
-            height: 100px;
-            border:1px solid #ccc;
-            margin-right: 20px;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <title>Test WebSocket</title>
+    <script type="text/javascript" src="../static/js/jquery-1.11.0.min.js"></script>
 </head>
 <body>
-<div class="slide-box">
-    <div class="slide-item"></div>
-    <div class="slide-item"></div>
-    <div class="slide-item"></div>
-    <div class="slide-item"></div>
-    <div class="slide-item"></div>
-</div>
+
+<button onclick="start()">开始测试</button>
+
 </body>
+<script>
+
+    function start() {
+        init();
+    }
+
+    function init() {
+        console.log("进来了")
+        let ws = new WebSocket("ws://localhost:8080/cmd/prod");
+
+        ws.onopen = function(){}
+
+        ws.onmessage = function(value) {
+
+            console.log(value + "---");
+        }
+    }
+
+</script>
+
 </html>
