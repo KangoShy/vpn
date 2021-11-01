@@ -36,7 +36,6 @@
         border-color: #0665d0;
         line-height: 40px;
     }
-
     .regBtn{
         background-color: white;
         width: 25%;
@@ -47,6 +46,7 @@
         border-color: black;
         line-height: 40px;
     }
+
 
 </style>
 <body style="background-image: url('../static/image/login_back_image.jpeg')">
@@ -65,15 +65,15 @@
                 <img src="../static/image/jepan.png" style="width: 10%;">
                 <img src="../static/image/us.png" style="width: 10%;">
             </span>
-            <h4><input class="inputs" type="email" id="user" placeholder="&nbsp;&nbsp;邮箱" /></h4>
-            <h4><input class="inputs" type="password" id="pass" placeholder="&nbsp;&nbsp;密码" /></h4>
+            <h4><label for="user"></label><input class="inputs" type="email" id="user" autocomplete="off" placeholder="&nbsp;&nbsp;邮箱" /></h4>
+            <h4><label for="pass"></label><input class="inputs" type="password" id="pass" autocomplete="off" placeholder="&nbsp;&nbsp;密码" /></h4>
+            <h4><label for="pass2"></label><input class="inputs" type="password" id="pass2" autocomplete="off" placeholder="&nbsp;&nbsp;确认密码" /></h4>
             <h4 style="color: red" id="ts"></h4>
             <br>
-            <button class="regBtn" type="button" onclick="reg()">去注册</button>
-            <button class="loginBtn" type="button" onclick="login()">登入</button>
+            <button class="regBtn" type="button" onclick="toLogin()">去登录</button>
+            <button class="loginBtn" type="button" onclick="reg()">注册</button>
         </div>
         <br>
-        <h5 style="margin-left: 80%"><a style="text-decoration: none;color: #6c757d" href="/toLogin">找回密码</a></h5>
     </article>
 </main>
 <br>
@@ -86,40 +86,43 @@
 </body>
 
 <script>
-    function login() {
-        $.ajax({
-            type: "POST",
-            url: "/login",
-            dataType: "json",
-            data: {
-                "userAccount": document.getElementById("user").value,
-                "userPassWord": document.getElementById("pass").value
-            },
-            success: function (data) {
-                if (data.code === "1111") {
-                    //缓存在浏览器，关闭失效；
-                    let map = data['data'];
-                    window.localStorage.setItem('token', map['token']);
-                    location.href = "/toIndex";
-                } else if (data.code === "2222") {
-                    $("#ts").empty();
-                    $("#ts").append(data.message);
-                } else if (data.code === "4444") {
-                    $("#ts").empty();
-                    $("#ts").append(data.message);
-                } else {
-                    $("#ts").empty();
-                    $("#ts").append("登录失败！");
-                }
-            },
-            error: function () {
-                show("系统错误")
-            }
-        });
-    }
     function reg() {
-        window.location.href = "/reg"
+        alert("敬请期待！");
+        // $.ajax({
+        //     type: "POST",
+        //     url: "/login",
+        //     dataType: "json",
+        //     data: {
+        //         "userAccount": document.getElementById("user").value,
+        //         "userPassWord": document.getElementById("pass").value
+        //     },
+        //     success: function (data) {
+        //         if (data.code === "1111") {
+        //             //缓存在浏览器，关闭失效；
+        //             let map = data['data'];
+        //             window.localStorage.setItem('token', map['token']);
+        //             location.href = "/toIndex";
+        //         } else if (data.code === "2222") {
+        //             $("#ts").empty();
+        //             $("#ts").append(data.message);
+        //         } else if (data.code === "4444") {
+        //             $("#ts").empty();
+        //             $("#ts").append(data.message);
+        //         } else {
+        //             $("#ts").empty();
+        //             $("#ts").append("登录失败！");
+        //         }
+        //     },
+        //     error: function () {
+        //         show("系统错误")
+        //     }
+        // });
     }
+
+    function toLogin() {
+        window.location.href = "/toLogin";
+    }
+
 </script>
 
 </html>

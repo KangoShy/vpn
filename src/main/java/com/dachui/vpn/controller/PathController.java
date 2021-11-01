@@ -69,6 +69,11 @@ public class PathController {
         return "android";
     }
 
+    @RequestMapping("/reg")
+    public String reg() {
+        return "reg";
+    }
+
     @RequestMapping("/iosCourse")
     public String iosCourse() {
         return "IOS";
