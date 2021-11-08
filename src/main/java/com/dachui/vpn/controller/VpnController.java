@@ -61,5 +61,17 @@ public class VpnController {
         return vpnService.getMyOrderList(key, pageSize);
     }
 
+    /* 获取消息 */
+    @GetMapping("/getMessage")
+    public Result<?> getMessage() {
+        return Result.success(vpnService.getMessage());
+    }
+
+    /* 消息已读 */
+    @GetMapping("/read")
+    public void messageRead(Long messageId) {
+        vpnService.messageRead(messageId);
+    }
+
 
 }

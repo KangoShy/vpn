@@ -65,9 +65,9 @@
                 <img src="../static/image/jepan.png" style="width: 10%;">
                 <img src="../static/image/us.png" style="width: 10%;">
             </span>
-            <h4><label for="user"></label><input class="inputs" type="email" id="user" autocomplete="off" placeholder="&nbsp;&nbsp;邮箱" /></h4>
-            <h4><label for="pass"></label><input class="inputs" type="password" id="pass" autocomplete="off" placeholder="&nbsp;&nbsp;密码" /></h4>
-            <h4><label for="pass2"></label><input class="inputs" type="password" id="pass2" autocomplete="off" placeholder="&nbsp;&nbsp;确认密码" /></h4>
+            <h4><label for="user"></label><input class="inputs" type="email" id="user" autocomplete="new-password" placeholder="&nbsp;&nbsp;邮箱" /></h4>
+            <h4><label for="pass"></label><input class="inputs" type="password" id="pass" autocomplete="new-password" placeholder="&nbsp;&nbsp;密码" /></h4>
+            <h4><label for="pass2"></label><input class="inputs" type="password" id="pass2" autocomplete="new-password" placeholder="&nbsp;&nbsp;确认密码" /></h4>
             <h4 style="color: red" id="ts"></h4>
             <br>
             <button class="regBtn" type="button" onclick="toLogin()">去登录</button>
@@ -87,36 +87,28 @@
 
 <script>
     function reg() {
-        alert("敬请期待！");
-        // $.ajax({
-        //     type: "POST",
-        //     url: "/login",
-        //     dataType: "json",
-        //     data: {
-        //         "userAccount": document.getElementById("user").value,
-        //         "userPassWord": document.getElementById("pass").value
-        //     },
-        //     success: function (data) {
-        //         if (data.code === "1111") {
-        //             //缓存在浏览器，关闭失效；
-        //             let map = data['data'];
-        //             window.localStorage.setItem('token', map['token']);
-        //             location.href = "/toIndex";
-        //         } else if (data.code === "2222") {
-        //             $("#ts").empty();
-        //             $("#ts").append(data.message);
-        //         } else if (data.code === "4444") {
-        //             $("#ts").empty();
-        //             $("#ts").append(data.message);
-        //         } else {
-        //             $("#ts").empty();
-        //             $("#ts").append("登录失败！");
-        //         }
-        //     },
-        //     error: function () {
-        //         show("系统错误")
-        //     }
-        // });
+        $.ajax({
+            type: "POST",
+            url: "/user/regs",
+            dataType: "json",
+            data: JSON.stringify({
+                "userAccount": document.getElementById("user").value,
+                "password": document.getElementById("pass").value,
+                "password2": document.getElementById("pass2").value
+            }),
+            contentType: 'application/json;charset=UTF-8',
+            success: function (data) {
+                if (data.code === "9000") {
+                    alert(data.message);
+                } else if (data.code === "0000") {
+                    alert("注册成功，点击前往登录！");
+                    toLogin();
+                }
+            },
+            error: function () {
+                alert("系统错误")
+            }
+        });
     }
 
     function toLogin() {

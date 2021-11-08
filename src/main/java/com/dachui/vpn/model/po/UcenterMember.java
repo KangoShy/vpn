@@ -18,7 +18,9 @@ import lombok.Setter;
 @TableName(value = "user_center")
 public class UcenterMember extends BaseEntity {
 
-    @TableId(value = "user_id",type = IdType.AUTO)
+    @TableId(value = "id",type = IdType.AUTO)
+    private Long id;
+    @TableId("user_id")
     private String userId;
     @TableField(value = "user_name")
     private String userName;

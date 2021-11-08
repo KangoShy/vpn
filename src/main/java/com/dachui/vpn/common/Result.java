@@ -40,6 +40,7 @@ public class Result<Object> {
         return res;
     }
 
+
     public static <Object> Result<Object> success(Object data) {
         return new Result(ReturnCodeStatusEnum.SEARCH_SUCCESS, data);
     }

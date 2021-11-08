@@ -26,10 +26,9 @@ body {
 }
 
 .intro {
-    /*background-image: url("../image/asif-mughal.jpg");*/
-    padding: 20px 20px;
+    padding: 0 15px;
     color: #333;
-    margin-bottom: -30px;
+    margin-bottom: -10px;
     line-height: 0;
     text-align: center;
 }
@@ -231,6 +230,7 @@ article {
 
 h1, h2, h3, h4 {
     margin: 10px 0;
+    line-height: 20px;
 
 }
 

@@ -8,18 +8,21 @@ import com.dachui.vpn.model.BaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
+// 派发记录表
 @Getter
 @Setter
-@TableName("vpn_common")
-public class VpnCommonPO extends BaseEntity {
+@TableName("grant_order_record")
+public class GrantOrderRecordPO extends BaseEntity {
 
     @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
+    private Long grantId;
 
-    // 一个或多个配置 绑定一个套餐
-    @TableField("combo_id")
-    private Long comboId;
+    @TableField("vpn_common_id")
+    private Long vpnCommonId;
 
-    @TableField("vpn_config")
-    private String vpn_config;
+    @TableField("success")
+    private boolean success;
+
+
+
 }

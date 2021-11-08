@@ -6,24 +6,22 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.dachui.vpn.common.Result;
 import com.dachui.vpn.config.AroundException;
+import com.dachui.vpn.config.MessageConstants;
 import com.dachui.vpn.enums.RedisConstantsKeyEnum;
 import com.dachui.vpn.enums.OrderStatusEnum;
 import com.dachui.vpn.enums.ReturnCodeStatusEnum;
 import com.dachui.vpn.model.BaseEntity;
-import com.dachui.vpn.model.po.OrderRecordsPO;
+import com.dachui.vpn.model.po.*;
 import com.dachui.vpn.model.vo.ComboResultVO;
-import com.dachui.vpn.model.po.UserKnowPO;
-import com.dachui.vpn.model.po.VpnComboPO;
 import com.dachui.vpn.model.vo.PayRequestVO;
 import com.dachui.vpn.model.vo.PlaceOrderRequestVO;
-import com.dachui.vpn.repository.OrderRecordsMapper;
-import com.dachui.vpn.repository.UserKnowMapper;
-import com.dachui.vpn.repository.VpnComboMapper;
+import com.dachui.vpn.repository.*;
 import com.dachui.vpn.util.RedisUtil;
 import com.dachui.vpn.util.StringUtil;
 import io.netty.util.HashedWheelTimer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -44,6 +42,10 @@ public class VpnService {
     private OrderRecordsMapper orderRecordsMapper;
     @Resource
     private RedisUtil redisUtil;
+    @Resource
+    private UserMessageMapper userMessageMapper;
+    @Resource
+    private GrantOrderRecordMapper grantOrderRecordMapper;
 
     public Object getUserKnow() {
         Object o = redisUtil.get(RedisConstantsKeyEnum.USER_KNOW_KEY.getKey());
@@ -120,11 +122,12 @@ public class VpnService {
         orderRecordsPO.setComboType(requestVO.getType());
         Calendar instance = Calendar.getInstance();
         instance.setTime(now);
-        // TODO 订单失效时间 1 min
-        instance.add(Calendar.MINUTE, 1);
+        // TODO 订单失效时间 2 min
+        instance.add(Calendar.MINUTE, 2);
         Date time = instance.getTime();
         orderRecordsPO.setFailureTime(time);
         orderRecordsMapper.insert(orderRecordsPO);
+        log.info("下单成功！");
         // 将订单缓存在redis中
         redisUtil.set(
                 RedisConstantsKeyEnum.ORDER_CACHE_KEY.getKey().concat(orderNo),
@@ -139,7 +142,7 @@ public class VpnService {
     }
 
     private synchronized void syncOrderStatus(String orderNo) {
-        log.info("--------> 开始处理订单：{}\n", orderNo);
+        log.info("--------> 开始处理订单：{}", orderNo);
         LambdaQueryWrapper<OrderRecordsPO> wrapper =
                 Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, orderNo).eq(OrderRecordsPO::isDeleted, Boolean.FALSE);
         OrderRecordsPO orderPo = orderRecordsMapper.selectOne(wrapper);
@@ -187,10 +190,10 @@ public class VpnService {
      */
 
     // 检查订单状态-付款
-    public Result<Object> pay(PayRequestVO PayRequestVO) {
-        System.err.println("orderId = " + PayRequestVO.getOrderId());
+    public Result<Object> pay(PayRequestVO payRequestVO) {
+        System.err.println("orderId = " + payRequestVO.getOrderId());
         OrderRecordsPO orderRecordsPO = orderRecordsMapper.selectOne(
-                Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, PayRequestVO.getOrderId()));
+                Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, payRequestVO.getOrderId()));
         if (orderRecordsPO == null || orderRecordsPO.isDeleted() || !OrderStatusEnum.PAY_NO.getCode().equals(orderRecordsPO.getOrderStatus())) {
             return Result.fail("该订单已失效，请重新下单");
         }
@@ -202,7 +205,39 @@ public class VpnService {
                         .set(OrderRecordsPO::getOrderStatus, OrderStatusEnum.PAY_YES.getCode())
                         .set(OrderRecordsPO::getPay, "支付宝")
                         .set(OrderRecordsPO::isDeleted, Boolean.TRUE));
+        new Thread(() -> this.grantOrder(payRequestVO.getOrderId())).start();
         return Result.success("付款完成");
+    }
+
+    private void grantOrder(String orderId) {
+        log.info(">>> 开始派发订单！");
+        long start = System.currentTimeMillis();
+        OrderRecordsPO orderRecordsPO;
+        // 查询订单
+        FIND_ORDER:
+        {
+            orderRecordsPO = orderRecordsMapper.selectOne(
+                    Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::isDeleted, Boolean.TRUE)
+                            .eq(OrderRecordsPO::getOrderId, orderId)
+            );
+        }
+        if (orderRecordsPO == null) return;
+        GrantOrderRecordPO grantOrderRecordPO = new GrantOrderRecordPO();
+        //grantOrderRecordPO.setVpnCommonId(orderRecordsPO.getComboId());
+        grantOrderRecordPO.setCreateTime(new Date());
+        grantOrderRecordPO.setSuccess(Boolean.FALSE);// TODO
+        grantOrderRecordMapper.insert(grantOrderRecordPO);
+        NEW_MESSAGE:{
+            UserMessagePO userMessagePO = new UserMessagePO();
+            userMessagePO.setDeleted(Boolean.FALSE);
+            userMessagePO.setRead(Boolean.FALSE);
+            userMessagePO.setContent(MessageConstants.orderMessage);
+            userMessagePO.setMessageType(MessageConstants.MESSAGE);
+            // 对于用户而言
+            userMessagePO.setUserId(1L);
+            userMessagePO.setCreateTime(new Date());
+            userMessageMapper.insert(userMessagePO);
+        }
     }
 
     /**
@@ -253,5 +288,26 @@ public class VpnService {
         OrderRecordsPO orderRecordsPO = orderRecordsMapper.selectOne(
                 Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, orderId).eq(BaseEntity::isDeleted, Boolean.FALSE).eq(OrderRecordsPO::getOrderStatus, OrderStatusEnum.PAY_NO));
         return orderRecordsPO == null ? new OrderRecordsPO() : orderRecordsPO;
+    }
+
+    public UserMessagePO getMessage() {
+        Long userId = 1L;
+        UserMessagePO userMessagePO = new UserMessagePO();
+        List<UserMessagePO> userMessagePOS = userMessageMapper.selectList(
+                Wrappers.<UserMessagePO>lambdaQuery().eq(BaseEntity::isDeleted, Boolean.FALSE)
+                        .eq(UserMessagePO::isRead, Boolean.FALSE).eq(UserMessagePO::getUserId, userId)
+        );
+        if (!CollectionUtils.isEmpty(userMessagePOS)) {
+            userMessagePO = userMessagePOS.get(0);
+        }
+        return userMessagePO;
+    }
+
+    public void messageRead(Long messageId) {
+        userMessageMapper.update(
+                null, Wrappers.<UserMessagePO>lambdaUpdate()
+                .eq(UserMessagePO::getMessageId, messageId)
+                .set(UserMessagePO::getCreateTime, new Date())
+                .set(UserMessagePO::isRead, Boolean.TRUE));
     }
 }

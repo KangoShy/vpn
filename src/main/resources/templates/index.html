@@ -41,13 +41,21 @@
         border: 0;
         background: dodgerblue;
         color: white;
-        padding: 4px;
         align-content: center;
         border-radius: 3px;
         margin-bottom: 5px;
+        padding: 5px 10px 5px 10px;
     }
-    .related {
-
+    .tz{
+        outline: none;
+        border: 0;
+        background: red;
+        color: white;
+        align-content: center;
+        border-radius: 3px;
+        margin-bottom: 5px;
+        padding: 0 5px 0 5px;
+        line-height: 20px;
     }
 </style>
 <body>
@@ -57,7 +65,7 @@
     </menuitem>
 
     <menuitem class="logo" title="Your Logo Goes Here">
-        <h6>天下数据</h6>
+            <h6>天下数据</h6>
     </menuitem>
 
 </menu>
@@ -120,6 +128,13 @@
 
 <br>
 <br>
+<main>
+    <article>
+        <h4>
+            <button class="tz">消息</button>&nbsp;&nbsp;您的订单已派发，请立即前往查看！
+        </h4>
+    </article>
+</main>
 <header class="intro">
     <div>
         <picture>
@@ -227,19 +242,21 @@
     }
 
     window.onload = function () {
-        let x = false;
-        let urlhash = window.location.hash;
-        if (!urlhash.match("fromapp")){
-            if ((navigator.userAgent.match(/(iPhone|iPod|Android|ios|iPad)/i))){
-                x = true;
-            }
-        }
-        if (x) {
-            getUserKnow();
-            getComboData();
-        }else{
-            window.location.href = "/sourceError"
-        }
+        getUserKnow();
+        getComboData();
+        // let x = false;
+        // let urlhash = window.location.hash;
+        // if (!urlhash.match("fromapp")){
+        //     if ((navigator.userAgent.match(/(iPhone|iPod|Android|ios|iPad)/i))){
+        //         x = true;
+        //     }
+        // }
+        // if (x) {
+        //     getUserKnow();
+        //     getComboData();
+        // }else{
+        //     window.location.href = "/sourceError"
+        // }
     };
 
 </script>

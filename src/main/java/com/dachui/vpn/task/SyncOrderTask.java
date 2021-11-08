@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
-public class SyncOrderFromRedis {
+public class SyncOrderTask {
 
     @Resource
     private RedisUtil redisUtil;

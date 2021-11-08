@@ -37,7 +37,7 @@ body{
   font-smoothing: antialiased;
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
-   --skin: #2a2a2e;
+   --skin: #0950d0;
    --skin-hover: #2098D1; 
    --skin-color: rgba(255, 255, 255, 0.8); 
 }
@@ -51,7 +51,7 @@ body{
    width: 100%;
    height: 48px;
    display: block;
-   background: var(--skin);
+   background: #0950d0;
    color: var(--skin-color);
    line-height: 48px;
    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6);

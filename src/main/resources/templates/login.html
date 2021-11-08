@@ -65,8 +65,8 @@
                 <img src="../static/image/jepan.png" style="width: 10%;">
                 <img src="../static/image/us.png" style="width: 10%;">
             </span>
-            <h4><input class="inputs" type="email" id="user" placeholder="&nbsp;&nbsp;邮箱" /></h4>
-            <h4><input class="inputs" type="password" id="pass" placeholder="&nbsp;&nbsp;密码" /></h4>
+            <h4><input class="inputs" type="email" autocomplete="new-password" id="user" placeholder="&nbsp;&nbsp;邮箱" /></h4>
+            <h4><input class="inputs" type="password" autocomplete="new-password" id="pass" placeholder="&nbsp;&nbsp;密码" /></h4>
             <h4 style="color: red" id="ts"></h4>
             <br>
             <button class="regBtn" type="button" onclick="reg()">去注册</button>
@@ -87,13 +87,23 @@
 
 <script>
     function login() {
+        let user = document.getElementById("user").value;
+        let pass = document.getElementById("pass").value;
+        if (user == null || user === '') {
+            alert("请输入账号！");
+            return;
+        }
+        if (pass == null || pass === '') {
+            alert("请输入密码！");
+            return;
+        }
         $.ajax({
             type: "POST",
             url: "/login",
             dataType: "json",
             data: {
-                "userAccount": document.getElementById("user").value,
-                "userPassWord": document.getElementById("pass").value
+                "userAccount": user,
+                "userPassWord": pass
             },
             success: function (data) {
                 if (data.code === "1111") {
@@ -101,15 +111,8 @@
                     let map = data['data'];
                     window.localStorage.setItem('token', map['token']);
                     location.href = "/toIndex";
-                } else if (data.code === "2222") {
-                    $("#ts").empty();
-                    $("#ts").append(data.message);
-                } else if (data.code === "4444") {
-                    $("#ts").empty();
-                    $("#ts").append(data.message);
                 } else {
-                    $("#ts").empty();
-                    $("#ts").append("登录失败！");
+                    alert(data.message);
                 }
             },
             error: function () {
