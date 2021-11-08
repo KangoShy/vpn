@@ -10,6 +10,14 @@ spring:
     username: ENC(Q4cob5nVy0Trgz0YVcQ+Xg==)
     password: ENC(C5uJ4nXfiPFgimLBAs6ZL3LAMCy/0XqB)
     url: jdbc:mysql://103.243.26.140:3306/vpn?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
+  hikari:
+    max-lifetime: 1200000
+    connection-timeout: 600000
+    validation-timeout: 3000
+    idle-timeout: 30000
+    minimum-idle: 10
+    maximum-pool-size: 10
+    connection-test-query: select 1
 
   redis:
     host: 103.243.26.140

@@ -244,21 +244,19 @@
     window.onload = function () {
         getUserKnow();
         getComboData();
-        // let x = false;
-        // let urlhash = window.location.hash;
-        // if (!urlhash.match("fromapp")){
-        //     if ((navigator.userAgent.match(/(iPhone|iPod|Android|ios|iPad)/i))){
-        //         x = true;
-        //     }
-        // }
-        // if (x) {
-        //     getUserKnow();
-        //     getComboData();
-        // }else{
-        //     window.location.href = "/sourceError"
-        // }
     };
 
+    function getMessage() {
+        $.ajax({
+            url: '/vpn/getMessage',
+            type: 'GET',
+            success: function (res) {
+                console.log(res);
+            }
+        })
+    }
+
+    setInterval("getMessage()", "10000");
 </script>
 </body>
 </html>

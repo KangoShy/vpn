@@ -293,13 +293,13 @@ public class VpnService {
     public UserMessagePO getMessage() {
         Long userId = 1L;
         UserMessagePO userMessagePO = new UserMessagePO();
-        List<UserMessagePO> userMessagePOS = userMessageMapper.selectList(
-                Wrappers.<UserMessagePO>lambdaQuery().eq(BaseEntity::isDeleted, Boolean.FALSE)
-                        .eq(UserMessagePO::isRead, Boolean.FALSE).eq(UserMessagePO::getUserId, userId)
-        );
-        if (!CollectionUtils.isEmpty(userMessagePOS)) {
-            userMessagePO = userMessagePOS.get(0);
-        }
+//        List<UserMessagePO> userMessagePOS = userMessageMapper.selectList(
+//                Wrappers.<UserMessagePO>lambdaQuery().eq(BaseEntity::isDeleted, Boolean.FALSE)
+//                        .eq(UserMessagePO::isRead, Boolean.FALSE).eq(UserMessagePO::getUserId, userId)
+//        );
+//        if (!CollectionUtils.isEmpty(userMessagePOS)) {
+//            userMessagePO = userMessagePOS.get(0);
+//        }
         return userMessagePO;
     }
 
