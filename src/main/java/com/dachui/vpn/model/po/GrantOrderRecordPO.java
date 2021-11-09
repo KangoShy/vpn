@@ -15,14 +15,11 @@ import lombok.Setter;
 public class GrantOrderRecordPO extends BaseEntity {
 
     @TableId(value = "id", type = IdType.AUTO)
-    private Long grantId;
+    private Long id;
 
     @TableField("vpn_common_id")
     private Long vpnCommonId;
 
-    @TableField("success")
-    private boolean success;
-
-
-
+    @TableField("is_success")
+    private boolean isSuccess;
 }

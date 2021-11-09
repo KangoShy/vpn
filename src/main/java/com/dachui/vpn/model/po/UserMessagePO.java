@@ -17,14 +17,14 @@ public class UserMessagePO extends BaseEntity {
     @TableId(value = "message_id", type = IdType.AUTO)
     private Long messageId;
 
-    @TableField("userId")
+    @TableField("user_id")
     private Long userId;
 
     @TableField("content")
     private String content;
 
-    @TableField("read")
-    private boolean read;
+    @TableField("already_read")
+    private boolean alreadyRead;
 
     @TableField("message_type")
     private String messageType;

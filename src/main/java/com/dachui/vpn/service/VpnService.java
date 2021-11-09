@@ -223,14 +223,15 @@ public class VpnService {
         }
         if (orderRecordsPO == null) return;
         GrantOrderRecordPO grantOrderRecordPO = new GrantOrderRecordPO();
+        // 新建vpn资源的时候 会绑定到特定套餐下 这里查询该套餐下的最新有效的vpn服务器进行派发
         //grantOrderRecordPO.setVpnCommonId(orderRecordsPO.getComboId());
         grantOrderRecordPO.setCreateTime(new Date());
-        grantOrderRecordPO.setSuccess(Boolean.FALSE);// TODO
+        grantOrderRecordPO.setSuccess(Boolean.FALSE);
         grantOrderRecordMapper.insert(grantOrderRecordPO);
         NEW_MESSAGE:{
             UserMessagePO userMessagePO = new UserMessagePO();
             userMessagePO.setDeleted(Boolean.FALSE);
-            userMessagePO.setRead(Boolean.FALSE);
+            userMessagePO.setAlreadyRead(Boolean.FALSE);
             userMessagePO.setContent(MessageConstants.orderMessage);
             userMessagePO.setMessageType(MessageConstants.MESSAGE);
             // 对于用户而言
@@ -292,14 +293,15 @@ public class VpnService {
 
     public UserMessagePO getMessage() {
         Long userId = 1L;
-        UserMessagePO userMessagePO = new UserMessagePO();
-//        List<UserMessagePO> userMessagePOS = userMessageMapper.selectList(
-//                Wrappers.<UserMessagePO>lambdaQuery().eq(BaseEntity::isDeleted, Boolean.FALSE)
-//                        .eq(UserMessagePO::isRead, Boolean.FALSE).eq(UserMessagePO::getUserId, userId)
-//        );
-//        if (!CollectionUtils.isEmpty(userMessagePOS)) {
-//            userMessagePO = userMessagePOS.get(0);
-//        }
+        UserMessagePO userMessagePO = null;
+        List<UserMessagePO> userMessagePOS = userMessageMapper.selectList(
+                Wrappers.<UserMessagePO>lambdaQuery().eq(BaseEntity::isDeleted, Boolean.FALSE)
+                        .eq(UserMessagePO::isAlreadyRead, Boolean.FALSE).eq(UserMessagePO::getUserId, userId)
+                .orderByDesc(UserMessagePO::getCreateTime)
+        );
+        if (!CollectionUtils.isEmpty(userMessagePOS)) {
+            userMessagePO = userMessagePOS.get(0);
+        }
         return userMessagePO;
     }
 
@@ -308,6 +310,6 @@ public class VpnService {
                 null, Wrappers.<UserMessagePO>lambdaUpdate()
                 .eq(UserMessagePO::getMessageId, messageId)
                 .set(UserMessagePO::getCreateTime, new Date())
-                .set(UserMessagePO::isRead, Boolean.TRUE));
+                .set(UserMessagePO::isAlreadyRead, Boolean.TRUE));
     }
 }

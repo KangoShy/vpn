@@ -128,13 +128,7 @@
 
 <br>
 <br>
-<main>
-    <article>
-        <h4>
-            <button class="tz">消息</button>&nbsp;&nbsp;您的订单已派发，请立即前往查看！
-        </h4>
-    </article>
-</main>
+<div id="xxtz"><br></div>
 <header class="intro">
     <div>
         <picture>
@@ -251,12 +245,42 @@
             url: '/vpn/getMessage',
             type: 'GET',
             success: function (res) {
-                console.log(res);
+                if (res != null) {
+                    let data = res.data;
+                    if (data == null) {
+                        $("#xxtz").empty();
+                        $("#xxtz").append("<br>")
+                    }else{
+                        let text =
+                            "<main>\n" +
+                            "    <article>\n" +
+                            "        <h4>\n" +
+                            "            <button class=\"tz\">" + data.messageType + "</button>&nbsp;&nbsp;<a onclick='readMessage(" + data.messageId + ")'>" + data.content + "</a>\n" +
+                            "        </h4>\n" +
+                            "    </article>\n" +
+                            "</main>";
+                        $("#xxtz").empty();
+                        $("#xxtz").append(text);
+                    }
+                }
             }
         })
     }
 
-    setInterval("getMessage()", "10000");
+    setInterval("getMessage()", "1000");
+
+    function readMessage(id) {
+        $.ajax({
+            url: '/vpn/read',
+            data:{"messageId" : id},
+            type: 'GET',
+            success: function () {
+                $("#xxtz").empty();
+                $("#xxtz").append("<br>");
+            }
+        })
+    }
+
 </script>
 </body>
 </html>
