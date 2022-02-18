@@ -1,9 +1,11 @@
 package com.dachui.vpn.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.dachui.vpn.common.RabbitConstants;
 import com.dachui.vpn.common.Result;
 import com.dachui.vpn.config.AroundException;
 import com.dachui.vpn.config.MessageConstants;
@@ -20,7 +22,9 @@ import com.dachui.vpn.util.RedisUtil;
 import com.dachui.vpn.util.StringUtil;
 import io.netty.util.HashedWheelTimer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -31,7 +35,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@SuppressWarnings("unchecked")
+@SuppressWarnings("all")
 public class VpnService {
 
     @Resource
@@ -46,6 +50,8 @@ public class VpnService {
     private UserMessageMapper userMessageMapper;
     @Resource
     private GrantOrderRecordMapper grantOrderRecordMapper;
+    @Resource
+    private RabbitTemplate rabbitTemplate;
 
     public Object getUserKnow() {
         Object o = redisUtil.get(RedisConstantsKeyEnum.USER_KNOW_KEY.getKey());
@@ -71,6 +77,7 @@ public class VpnService {
     public Object getComboList() {
         List<ComboResultVO> collectList = new ArrayList<>();
         Object o = redisUtil.get(RedisConstantsKeyEnum.COM_BO_KEY.getKey());
+        o = null;
         if (o == null) {
             List<VpnComboPO> list = Optional.ofNullable(
                     vpnComboMapper.selectList(
@@ -79,7 +86,7 @@ public class VpnService {
                 BigDecimal comboPrice = po.getComboPrice();
                 ComboResultVO vo = new ComboResultVO();
                 vo.setComboName(po.getComboName());
-                vo.setComboPrice("￥".concat(comboPrice.toPlainString()).concat(".00 CNY"));
+                vo.setComboPrice("CNY ".concat(comboPrice.toPlainString()).concat(".00"));
                 vo.setId(po.getId());
                 collectList.add(vo);
             }
@@ -97,48 +104,75 @@ public class VpnService {
         return po;
     }
 
+    /* *
+     * 功能：新增订单记录，同步消息队列
+     * 作者：大锤
+     * 创建/修改日期：2022/2/18
+     */
+    @Transactional(rollbackFor = Exception.class)
     public OrderRecordsPO placeTheOrder(PlaceOrderRequestVO requestVO) {
-        Long comboId = requestVO.getComboId();
-        if (comboId == null) {
-            comboId = -1L;
-        }
+        long start = System.currentTimeMillis();
+        // 检查套餐是否合法
+        VpnComboPO vpnComboPO = checkOrderExists(requestVO.getComboId());
+        String orderNo = AlipayHandler.getOrderIdByTime();
+        String orderKey = RedisConstantsKeyEnum.ORDER_CACHE_KEY.getKey().concat(orderNo);
+        // 将订单缓存在redis中
+        joinRedisCache(orderKey, orderNo);
+        // 订单记录
+        OrderRecordsPO orderRecordsPO = joinOrderRecord2DB(vpnComboPO, orderNo, requestVO);
+        // 执行插入
+        orderRecordsMapper.insert(orderRecordsPO);
+        // 同步至消息队列
+        //joinRabbitQueue(orderNo);
+        log.info(" >>>下单成功,总耗时 = {}ms, 订单信息 = {} ", (System.currentTimeMillis() - start),
+                JSONObject.toJSONString(orderRecordsPO));
+        return orderRecordsPO;
+    }
+
+    private void joinRedisCache(String orderKey, String orderNo) {
+        redisUtil.set(
+                orderKey, // 订单key
+                orderNo,  // 订单号
+                // 超时时间
+                RedisConstantsKeyEnum.ORDER_CACHE_KEY.getCacheTime() * 60);
+    }
+
+    private OrderRecordsPO joinOrderRecord2DB(VpnComboPO vpnComboPO, String orderNo, PlaceOrderRequestVO requestVO) {
+        OrderRecordsPO orderRecordsPO = OrderRecordsPO
+                .builder()
+                .comboId(vpnComboPO.getId())
+                .userId(1L)
+                .comboName(vpnComboPO.getComboName())
+                .orderId(orderNo)
+                .orderPrice(requestVO.getPrice())
+                .price(requestVO.getPrice())
+                .comboType(requestVO.getType())
+                .orderStatus(OrderStatusEnum.PAY_NO.getCode())
+                .build();
+        // 设置过期时间
+        Calendar instance = Calendar.getInstance();
+        instance.setTime(new Date());
+        instance.add(Calendar.MINUTE, 3);
+        orderRecordsPO.setFailureTime(instance.getTime());
+        orderRecordsPO.setCreateTime(new Date());
+        orderRecordsPO.setDeleted(Boolean.FALSE);
+        return orderRecordsPO;
+    }
+
+    private void joinRabbitQueue(String orderNo) {
+        rabbitTemplate.convertAndSend(
+                RabbitConstants.ORDER_DIRECT_EX_CHANGE,
+                RabbitConstants.ORDER_DIRECT_ROUTING,
+                orderNo);
+    }
+
+    private VpnComboPO checkOrderExists(Long comboId) {
+        if (comboId == null) throw new AroundException(ReturnCodeStatusEnum.SYSTEM_ERROR, "套餐不存在！");
         VpnComboPO vpnComboPO = selectComboById(comboId.toString());
         if (vpnComboPO == null) {
             throw new AroundException(ReturnCodeStatusEnum.SYSTEM_ERROR, "套餐不存在！");
         }
-        String orderNo = AlipayHandler.getOrderIdByTime();
-        OrderRecordsPO orderRecordsPO = new OrderRecordsPO();
-        Date now = new Date();
-        orderRecordsPO.setComboId(vpnComboPO.getId());
-        // TODO 模拟userId
-        orderRecordsPO.setUserId(1L);
-        orderRecordsPO.setComboName(vpnComboPO.getComboName());
-        orderRecordsPO.setOrderId(orderNo);
-        orderRecordsPO.setOrderPrice(requestVO.getPrice());
-        orderRecordsPO.setPrice(requestVO.getPrice());
-        orderRecordsPO.setDeleted(Boolean.FALSE);
-        orderRecordsPO.setOrderStatus(OrderStatusEnum.PAY_NO.getCode());
-        orderRecordsPO.setCreateTime(now);
-        orderRecordsPO.setComboType(requestVO.getType());
-        Calendar instance = Calendar.getInstance();
-        instance.setTime(now);
-        // TODO 订单失效时间 2 min
-        instance.add(Calendar.MINUTE, 2);
-        Date time = instance.getTime();
-        orderRecordsPO.setFailureTime(time);
-        orderRecordsMapper.insert(orderRecordsPO);
-        log.info("下单成功！");
-        // 将订单缓存在redis中
-        redisUtil.set(
-                RedisConstantsKeyEnum.ORDER_CACHE_KEY.getKey().concat(orderNo),
-                orderRecordsPO,
-                // 失效时间
-                RedisConstantsKeyEnum.ORDER_CACHE_KEY.getCacheTime());
-        HashedWheelTimer timer = new HashedWheelTimer();
-        // 延时队列
-        timer.newTimeout(
-                timeout -> syncOrderStatus(orderNo), RedisConstantsKeyEnum.getDescTime(), TimeUnit.SECONDS);
-        return orderRecordsPO;
+        return vpnComboPO;
     }
 
     private synchronized void syncOrderStatus(String orderNo) {

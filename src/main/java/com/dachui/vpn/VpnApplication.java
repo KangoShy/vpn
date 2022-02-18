@@ -15,7 +15,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class VpnApplication {
 
     public static void main(String[] args) {
-        System.setProperty("jasypt.encryptor.password", "KangoShyVpn500");
         SpringApplication.run(VpnApplication.class, args);
     }
 

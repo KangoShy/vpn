@@ -64,7 +64,8 @@ public class VpnController {
     /* 获取消息 */
     @GetMapping("/getMessage")
     public Result<?> getMessage() {
-        return Result.success(vpnService.getMessage());
+        return Result.success("");
+        /*return Result.success(vpnService.getMessage());*/
     }
 
     /* 消息已读 */

@@ -142,10 +142,11 @@
     </p>-->
 </header>
 
+<br>
 <main>
     <article>
         <div style="text-align: center" id="appendOrderStatus">
-            <h3>待支付</h3>
+            <div style="font-size: 30px" id="div0"></div>
             <h4>支付完成后，掌柜将快速为您处理订单</h4>
         </div>
     </article>
@@ -193,7 +194,7 @@
 <script src="../static/js/demo-only.js"></script>
 <script>
     $(document).ready(function () {
-
+        init();
         $(".menu-container").jSideMenu({
             jSidePosition: "position-left", //possible options position-left or position-right
 
@@ -295,6 +296,53 @@
         })
     }
 
+</script>
+<script>
+    var preset,inputs;
+    function init(){
+
+        preset=new Date();
+        preset.setHours(preset.getHours()+ 0);
+        preset.setMinutes(preset.getMinutes()+ 2);
+        preset.setSeconds(preset.getSeconds()+ 59);
+        var div=document.getElementById("div0");
+        setInterval(animation,500,div);
+
+
+    }
+
+    function animation(elem){
+        if(!preset) return;
+        var date=new Date();
+        var time=preset-date;//
+        if(time<0){
+            preset=null;
+            return;
+        }
+        time=time/1000;
+        var h = time >= 3600 ? parseInt(time/3600) : "00";
+        var m = time>=60 ? parseInt((time - h * 3600)/60) : "00";
+        var s = parseInt(time-h*3600-m*60);
+        h = (count(h+"") == 1) ? ("0" + h) : h;
+        m = (count(m+"") == 1) ? ("0" + m) : m;
+        s = (count(s+"") == 1) ? ("0" + s) : s;
+
+        elem.innerHTML=h+":"+m+":"+s;
+    }
+
+    function count(o){
+        var t = typeof o;
+        if(t == 'string'){
+            return o.length;
+        }else if(t == 'object'){
+            var n = 0;
+            for(var i in o){
+                n++;
+            }
+            return n;
+        }
+        return false;
+    };
 </script>
 </body>
 </html>
