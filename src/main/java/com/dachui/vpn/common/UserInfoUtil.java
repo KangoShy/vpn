@@ -26,7 +26,7 @@ public class UserInfoUtil {
         if (null == userInfoThreadLocal.get()) {
             return null;
         }
-        return userInfoThreadLocal.get().getUserName();
+        return userInfoThreadLocal.get().getUsername();
     }
 
     /** 获取上下文中的用户Id */

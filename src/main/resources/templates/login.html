@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,7 @@
     <meta name="keywords" content=""/>
     <meta name="description" content=""/>
     <link rel="stylesheet" href="../static/css/demo-only.css"/>
-    <script src="../static/js/jquery-1.11.0.min.js" type="text/javascript"></script>
+    <script th:src="@{../static/js/jquery-1.11.0.min.js}" type="text/javascript"></script>
 
 </head>
 <style>
@@ -59,11 +59,11 @@
                 <span style="font-size: 14px;color:#6c757d">本站商品为VPN、主要用于浏览国外网络、环球线路</span>
             </div>
             <span>
-                <img src="../static/image/china.png" style="width: 10%;">
-                <img src="../static/image/china_hk.png" style="width: 10%;">
-                <img src="../static/image/korean.png" style="width: 10%;">
-                <img src="../static/image/jepan.png" style="width: 10%;">
-                <img src="../static/image/us.png" style="width: 10%;">
+                <img th:src="@{../static/image/china.png}" style="width: 10%;">
+                <img src="/static/image/china_hk.png" style="width: 10%;">
+                <img src="/static/image/korean.png" style="width: 10%;">
+                <img src="/static/image/jepan.png" style="width: 10%;">
+                <img src="/static/image/us.png" style="width: 10%;">
             </span>
             <h4><input class="inputs" type="email" autocomplete="new-password" id="user" placeholder="&nbsp;&nbsp;邮箱" /></h4>
             <h4><input class="inputs" type="password" autocomplete="new-password" id="pass" placeholder="&nbsp;&nbsp;密码" /></h4>
@@ -102,21 +102,21 @@
             url: "/login",
             dataType: "json",
             data: {
-                "userAccount": user,
-                "userPassWord": pass
+                "userName": user,
+                "passWord": pass
             },
             success: function (data) {
-                if (data.code === "1111") {
+                if (data.code === "0000") {
                     //缓存在浏览器，关闭失效；
-                    let map = data['data'];
-                    window.localStorage.setItem('token', map['token']);
+                    let token = data['message'];
+                    window.localStorage.setItem('token', token);
                     location.href = "/toIndex";
                 } else {
                     alert(data.message);
                 }
             },
             error: function () {
-                show("系统错误")
+                alert("系统错误，请联系管理员！");
             }
         });
     }

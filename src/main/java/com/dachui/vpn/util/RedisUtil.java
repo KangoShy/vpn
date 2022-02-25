@@ -3,6 +3,7 @@ package com.dachui.vpn.util;
 import com.dachui.vpn.enums.RedisConstantsKeyEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit;
  * @date : 2019-06-25 9:18
  */
 @Service
+@Configuration
 public class RedisUtil {
 
     private static Logger logger = LoggerFactory.getLogger(RedisUtil.class);

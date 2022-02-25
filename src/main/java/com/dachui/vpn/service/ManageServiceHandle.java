@@ -1,15 +1,8 @@
 package com.dachui.vpn.service;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.dachui.vpn.config.MessageConstants;
 import com.dachui.vpn.model.VpnConfigInformation;
-import com.dachui.vpn.model.po.GrantOrderRecordPO;
-import com.dachui.vpn.model.po.OrderRecordsPO;
-import com.dachui.vpn.model.po.UserMessagePO;
-import com.dachui.vpn.repository.GrantOrderRecordMapper;
 import com.dachui.vpn.repository.OrderRecordsMapper;
-import com.dachui.vpn.repository.UcenterMemberMapper;
 import com.dachui.vpn.repository.UserMessageMapper;
 import com.dachui.vpn.util.AESUtil;
 import com.dachui.vpn.util.StringUtil;
@@ -23,7 +16,6 @@ import java.util.Date;
 @SuppressWarnings("all")
 public class ManageServiceHandle {
 
-    @Resource private UcenterMemberMapper ucenterMemberMapper;
     @Resource private OrderRecordsMapper orderRecordsMapper;
     @Resource private UserMessageMapper userMessageMapper;
 

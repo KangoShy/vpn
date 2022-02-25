@@ -8,6 +8,7 @@ import com.dachui.vpn.service.VpnService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -37,10 +38,19 @@ public class VpnController {
         return Result.success(vpnService.placeTheOrder(requestVO));
     }
 
+    @GetMapping("/getFailureTime")
+    public Result<Date> getFailureTime(String orderId) {
+        return Result.success(vpnService.getFailureTime(orderId));
+    }
+
     /* 获取订单状态 */
     @GetMapping("/getOrderStatus")
     public Result<Map<String, Object>> getOrderStatus(String orderId) {
-        return vpnService.getOrderStatus(orderId);
+        Object returnIns = vpnService.getOrderStatus(orderId);
+        if (returnIns instanceof Map) {
+            return Result.success(((Map) returnIns));
+        }
+        return Result.fail(returnIns.toString());
     }
 
     /* 关闭订单 */

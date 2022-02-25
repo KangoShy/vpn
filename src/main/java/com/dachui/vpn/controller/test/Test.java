@@ -1,11 +1,14 @@
-package com.dachui.vpn.controller;
+package com.dachui.vpn.controller.test;
 
+import com.alibaba.fastjson.JSONObject;
 import com.dachui.vpn.util.HttpUtil;
 import com.dachui.vpn.util.JsonUtil;
 import com.dachui.vpn.util.StringUtil;
 import lombok.Data;
 
 import java.text.BreakIterator;
+import java.util.ArrayList;
+import java.util.concurrent.locks.ReentrantLock;
 
 /* *
  * 功能：
@@ -16,7 +19,25 @@ import java.text.BreakIterator;
  */
 public class Test {
 
-    public static void request(String mobile) {
+    public static void main(String[] args) {
+        ArrayList arrayList = new ArrayList();
+        arrayList.add("1");
+        arrayList.add("222xxx");
+        String s = arrayList.toString();
+        System.err.println(s);
+
+        new ReentrantLock();
+
+
+
+        JSONObject json = new JSONObject();
+
+
+    }
+
+
+
+    /*public static void request(String mobile) {
         int count = 0;
         for (int i = 0; i < 100; i++) {
             String url = "http://c.huayeee.com/online/common/getVerifyCode?phone=" + mobile;
@@ -46,5 +67,5 @@ public class Test {
 
   public static void main(String[] args) {
       request("15769618635");
-  }
+  }*/
 }

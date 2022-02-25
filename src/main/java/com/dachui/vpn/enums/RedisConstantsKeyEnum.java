@@ -14,7 +14,7 @@ public enum  RedisConstantsKeyEnum {
 
     USER_KNOW_KEY("user::know::key", 60 * 5L, "用户须知"),
     COM_BO_KEY("com::bo::key", 24 * 60 * 60L, "套餐列表"),
-    ORDER_CACHE_KEY("order::", 3L, "生成订单"),
+    ORDER_CACHE_KEY("order::", 1L, "生成订单"),
 
     ;
     private final String    key;         // 缓存key

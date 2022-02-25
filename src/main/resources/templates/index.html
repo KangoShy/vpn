@@ -125,6 +125,8 @@
 
 
 </nav>
+
+
 <div class="dim-overlay"></div>
 
 <br>
@@ -196,6 +198,7 @@
             type: 'GET',
             async: true,
             dataType: 'json',
+            headers:{"Authorization": window.localStorage.getItem("token")},
             success: function (res) {
                 console.log(res);
                 if (res != null) {
@@ -223,6 +226,7 @@
             type: 'GET',
             async: true,
             dataType: 'json',
+            //headers:{"Authorization": window.localStorage.getItem("token")},
             success: function (res) {
                 console.log(res);
                 if (res != null) {
@@ -268,7 +272,7 @@
         })
     }
 
-    setInterval("getMessage()", "1000");
+    //setInterval("getMessage()", "1000");
 
     function readMessage(id) {
         $.ajax({

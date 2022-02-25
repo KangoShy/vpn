@@ -7,6 +7,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.annotation.Resource;
 
@@ -16,13 +18,7 @@ public class PathController {
     @Resource
     private VpnService vpnService;
 
-    @RequestMapping("/")
-    public String lll() {
-        System.err.println("进入login");
-        return "login";
-    }
-
-    @RequestMapping("/toLogin")
+    @RequestMapping("toLogin")
     public String toLogin() {
         return "login";
     }
@@ -55,12 +51,13 @@ public class PathController {
     }
 
     @RequestMapping("/creatOrder")
-    public String creatOrder(String comboName, String comboType, String orderId, String time, String price, Model model) {
-        model.addAttribute("comboName", comboName);
-        model.addAttribute("comboType", comboType);
+    public String creatOrder(String orderId, Model model) {
+        OrderRecordsPO orderById = vpnService.getOrderById(orderId);
         model.addAttribute("orderId", orderId);
-        model.addAttribute("time", time);
-        model.addAttribute("price", price);
+        model.addAttribute("time", orderById.getCreateTime());
+        model.addAttribute("price", orderById.getPrice());
+        model.addAttribute("comboName", orderById.getComboName());
+        model.addAttribute("comboType", orderById.getComboType());
         return "creatOrder";
     }
 

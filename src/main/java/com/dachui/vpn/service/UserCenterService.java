@@ -3,10 +3,11 @@ package com.dachui.vpn.service;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.dachui.vpn.common.Result;
+import com.dachui.vpn.common.UserInfoUtil;
 import com.dachui.vpn.model.BaseEntity;
-import com.dachui.vpn.model.po.UcenterMember;
+import com.dachui.vpn.model.po.UserCenterPO;
 import com.dachui.vpn.model.vo.RegVO;
-import com.dachui.vpn.repository.UcenterMemberMapper;
+import com.dachui.vpn.repository.UserCenterMapper;
 import com.dachui.vpn.util.AESUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,7 @@ import java.util.List;
 public class UserCenterService {
 
     @Resource
-    private UcenterMemberMapper ucenterMemberMapper;
+    private UserCenterMapper userCenterMapper;
 
     // 注册
     public Result<?> regAccount(RegVO vo) throws Exception {
@@ -29,7 +30,7 @@ public class UserCenterService {
         CHECK_PARAM:
         {
             boolean check = ManageServiceHandle.checkStringParam(
-                    vo.getUserAccount(),
+                    vo.getUserName(),
                     vo.getPassword(),
                     vo.getPassword2());
             if (check) {
@@ -39,9 +40,9 @@ public class UserCenterService {
         // 账号是否存在
         ACCOUNT_EXISTS:
         {
-            List<UcenterMember> ucenterMemberList = ucenterMemberMapper.selectList(
-                    Wrappers.<UcenterMember>lambdaQuery().eq(BaseEntity::isDeleted, Boolean.FALSE)
-                            .eq(UcenterMember::getUserAccount, vo.getUserAccount())
+            List<UserCenterPO> ucenterMemberList = userCenterMapper.selectList(
+                    Wrappers.<UserCenterPO>lambdaQuery().eq(BaseEntity::isDeleted, Boolean.FALSE)
+                            .eq(UserCenterPO::getUsername, vo.getUserName())
             );
             if (!CollectionUtils.isEmpty(ucenterMemberList)) {
                 return Result.fail("账号已经存在！");
@@ -50,31 +51,19 @@ public class UserCenterService {
                 return Result.fail("两次输入密码不一致!");
             }
         }
-        UcenterMember user = new UcenterMember();
+        UserCenterPO user = new UserCenterPO();
         // 注册
         ACCOUNT_REG:
         {
             String encryptPass = AESUtil.Encrypt(vo.getPassword());
-            user.setUserAccount(vo.getUserAccount());
-            user.setUserPassWord(encryptPass);
-            user.setUserName(ManageServiceHandle.makeUserName());
+            user.setUsername(vo.getUserName());
+            user.setPassword(encryptPass);
+            user.setUserRealName(ManageServiceHandle.makeUserName());
             user.setCreateTime(new Date());
-            user.setUserId(getNewUserId());
+            user.setEnabled(Boolean.TRUE);
+            user.setCreator(UserInfoUtil.getUserId());
         }
-        return ucenterMemberMapper.insert(user) == 1 ? Result.success("注册成功！") : Result.fail();
+        return userCenterMapper.insert(user) == 1 ? Result.success("注册成功！") : Result.fail();
     }
 
-    public String getNewUserId() {
-        List<UcenterMember> ucenterMembers = ucenterMemberMapper.selectList(
-                Wrappers.<UcenterMember>lambdaQuery().eq(BaseEntity::isDeleted, Boolean.FALSE).orderByDesc(UcenterMember::getUserId)
-        );
-        String resUserId = "1";
-        if (!CollectionUtils.isEmpty(ucenterMembers)) {
-            for (UcenterMember uc : ucenterMembers) {
-                resUserId = uc.getUserId() + 1L;
-                break;
-            }
-        }
-        return resUserId;
-    }
 }

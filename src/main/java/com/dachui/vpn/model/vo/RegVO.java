@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class RegVO {
 
-    private String userAccount;
+    private String userName;
 
     private String password;
 

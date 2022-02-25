@@ -9,11 +9,13 @@ import com.dachui.vpn.common.RabbitConstants;
 import com.dachui.vpn.common.Result;
 import com.dachui.vpn.config.AroundException;
 import com.dachui.vpn.config.MessageConstants;
+import com.dachui.vpn.config.SpringProperties;
 import com.dachui.vpn.enums.RedisConstantsKeyEnum;
 import com.dachui.vpn.enums.OrderStatusEnum;
 import com.dachui.vpn.enums.ReturnCodeStatusEnum;
 import com.dachui.vpn.model.BaseEntity;
 import com.dachui.vpn.model.po.*;
+import com.dachui.vpn.model.result.ServiceResponseStatus;
 import com.dachui.vpn.model.vo.ComboResultVO;
 import com.dachui.vpn.model.vo.PayRequestVO;
 import com.dachui.vpn.model.vo.PlaceOrderRequestVO;
@@ -52,6 +54,8 @@ public class VpnService {
     private GrantOrderRecordMapper grantOrderRecordMapper;
     @Resource
     private RabbitTemplate rabbitTemplate;
+    @Resource
+    private SpringProperties springProperties;
 
     public Object getUserKnow() {
         Object o = redisUtil.get(RedisConstantsKeyEnum.USER_KNOW_KEY.getKey());
@@ -77,7 +81,6 @@ public class VpnService {
     public Object getComboList() {
         List<ComboResultVO> collectList = new ArrayList<>();
         Object o = redisUtil.get(RedisConstantsKeyEnum.COM_BO_KEY.getKey());
-        o = null;
         if (o == null) {
             List<VpnComboPO> list = Optional.ofNullable(
                     vpnComboMapper.selectList(
@@ -116,12 +119,16 @@ public class VpnService {
         VpnComboPO vpnComboPO = checkOrderExists(requestVO.getComboId());
         String orderNo = AlipayHandler.getOrderIdByTime();
         String orderKey = RedisConstantsKeyEnum.ORDER_CACHE_KEY.getKey().concat(orderNo);
-        // 将订单缓存在redis中
-        joinRedisCache(orderKey, orderNo);
         // 订单记录
         OrderRecordsPO orderRecordsPO = joinOrderRecord2DB(vpnComboPO, orderNo, requestVO);
         // 执行插入
         orderRecordsMapper.insert(orderRecordsPO);
+        // 注意：缓存时间必须和超时时间保持严格一致
+        Date failureTime = orderRecordsPO.getFailureTime();
+        Date theNowTime = new Date();
+        long cacheSeconds = (failureTime.getTime() - theNowTime.getTime()) / 1000;
+        // 将订单缓存在redis中。规定时间不付款则订单失效
+        joinRedisCache(orderKey, orderNo, cacheSeconds);
         // 同步至消息队列
         //joinRabbitQueue(orderNo);
         log.info(" >>>下单成功,总耗时 = {}ms, 订单信息 = {} ", (System.currentTimeMillis() - start),
@@ -129,12 +136,11 @@ public class VpnService {
         return orderRecordsPO;
     }
 
-    private void joinRedisCache(String orderKey, String orderNo) {
+    private void joinRedisCache(String orderKey, String orderNo, long cacheSeconds) {
         redisUtil.set(
                 orderKey, // 订单key
                 orderNo,  // 订单号
-                // 超时时间
-                RedisConstantsKeyEnum.ORDER_CACHE_KEY.getCacheTime() * 60);
+                cacheSeconds); // 超时时间
     }
 
     private OrderRecordsPO joinOrderRecord2DB(VpnComboPO vpnComboPO, String orderNo, PlaceOrderRequestVO requestVO) {
@@ -152,7 +158,7 @@ public class VpnService {
         // 设置过期时间
         Calendar instance = Calendar.getInstance();
         instance.setTime(new Date());
-        instance.add(Calendar.MINUTE, 3);
+        instance.add(Calendar.MINUTE, springProperties.getTimeout());
         orderRecordsPO.setFailureTime(instance.getTime());
         orderRecordsPO.setCreateTime(new Date());
         orderRecordsPO.setDeleted(Boolean.FALSE);
@@ -239,7 +245,7 @@ public class VpnService {
                         .set(OrderRecordsPO::getOrderStatus, OrderStatusEnum.PAY_YES.getCode())
                         .set(OrderRecordsPO::getPay, "支付宝")
                         .set(OrderRecordsPO::isDeleted, Boolean.TRUE));
-        new Thread(() -> this.grantOrder(payRequestVO.getOrderId())).start();
+        //new Thread(() -> this.grantOrder(payRequestVO.getOrderId())).start();
         return Result.success("付款完成");
     }
 
@@ -262,39 +268,38 @@ public class VpnService {
         grantOrderRecordPO.setCreateTime(new Date());
         grantOrderRecordPO.setSuccess(Boolean.FALSE);
         grantOrderRecordMapper.insert(grantOrderRecordPO);
-        NEW_MESSAGE:{
+        NEW_MESSAGE:
+        {
             UserMessagePO userMessagePO = new UserMessagePO();
             userMessagePO.setDeleted(Boolean.FALSE);
             userMessagePO.setAlreadyRead(Boolean.FALSE);
             userMessagePO.setContent(MessageConstants.orderMessage);
             userMessagePO.setMessageType(MessageConstants.MESSAGE);
-            // 对于用户而言
             userMessagePO.setUserId(1L);
             userMessagePO.setCreateTime(new Date());
             userMessageMapper.insert(userMessagePO);
         }
     }
 
-    /**
-     * 回调完参数后调用
+    /* *
+     * 功能：获取订单状态
+     * 作者：大锤
+     * 创建/修改日期：2022/2/21
      */
-
-    public Result<Map<String, Object>> getOrderStatus(String orderId) {
-        // 过期 或 已付款 或 已关闭 = false else true
+    public Object getOrderStatus(String orderId) {
+        // 订单状态 0、等待付款中 1、已付款 2、已超时 3、已付款待发货 4、待发货
         OrderRecordsPO orderRecordsPO = orderRecordsMapper.selectOne(
-                Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, orderId));
-        // 超时
+                Wrappers.<OrderRecordsPO>lambdaQuery()
+                        .eq(StringUtil.isNotEmpty(orderId), OrderRecordsPO::getOrderId, orderId));
         if (orderRecordsPO == null) {
-            return Result.success(new HashMap<>());
+            return new String("抱歉，该订单发生错误，请前往首页重新下单！");
         }
-        boolean cs = new Date().after(orderRecordsPO.getFailureTime());
+        if (orderRecordsPO.isDeleted()) {
+            return new String("订单已删除！");
+        }
         HashMap<String, Object> map = new HashMap<>();
         map.put("status", orderRecordsPO.getOrderStatus());
-        map.put("zcgb", false);
-        if (!cs && orderRecordsPO.isDeleted() && !OrderStatusEnum.PAY_YES.getCode().equals(orderRecordsPO.getOrderStatus())) {
-            map.put("zcgb", true);
-        }
-        return Result.success(map);
+        return map;
     }
 
     public Result<List<OrderRecordsPO>> getMyOrderList(String key, Integer pageSize) {
@@ -321,7 +326,7 @@ public class VpnService {
 
     public OrderRecordsPO getOrderById(String orderId) {
         OrderRecordsPO orderRecordsPO = orderRecordsMapper.selectOne(
-                Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, orderId).eq(BaseEntity::isDeleted, Boolean.FALSE).eq(OrderRecordsPO::getOrderStatus, OrderStatusEnum.PAY_NO));
+                Wrappers.<OrderRecordsPO>lambdaQuery().eq(OrderRecordsPO::getOrderId, orderId));
         return orderRecordsPO == null ? new OrderRecordsPO() : orderRecordsPO;
     }
 
@@ -331,7 +336,7 @@ public class VpnService {
         List<UserMessagePO> userMessagePOS = userMessageMapper.selectList(
                 Wrappers.<UserMessagePO>lambdaQuery().eq(BaseEntity::isDeleted, Boolean.FALSE)
                         .eq(UserMessagePO::isAlreadyRead, Boolean.FALSE).eq(UserMessagePO::getUserId, userId)
-                .orderByDesc(UserMessagePO::getCreateTime)
+                        .orderByDesc(UserMessagePO::getCreateTime)
         );
         if (!CollectionUtils.isEmpty(userMessagePOS)) {
             userMessagePO = userMessagePOS.get(0);
@@ -342,8 +347,12 @@ public class VpnService {
     public void messageRead(Long messageId) {
         userMessageMapper.update(
                 null, Wrappers.<UserMessagePO>lambdaUpdate()
-                .eq(UserMessagePO::getMessageId, messageId)
-                .set(UserMessagePO::getCreateTime, new Date())
-                .set(UserMessagePO::isAlreadyRead, Boolean.TRUE));
+                        .eq(UserMessagePO::getMessageId, messageId)
+                        .set(UserMessagePO::getCreateTime, new Date())
+                        .set(UserMessagePO::isAlreadyRead, Boolean.TRUE));
+    }
+
+    public Date getFailureTime(String orderId) {
+        return getOrderById(orderId).getFailureTime();
     }
 }

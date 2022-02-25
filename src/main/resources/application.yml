@@ -23,6 +23,15 @@ spring:
     addresses: ENC(Sy8wv+c9aWv6p4a7kp8QUYiGLqzNmHSdWsMRh87s9k0=)
     username: ENC(thvW4ucDnOt6dR5L5XQo3Q==)
     password: ENC(thvW4ucDnOt6dR5L5XQo3Q==)
+    publisher-confirm-type: correlated #confirm回调模式，生产者到交换机如果发送失败，会回调confirm方法
+    publisher-returns: true #交换机到队列如果发送失败，true会回到队列中，false会直接丢弃
+    #return模式
+    template:
+      mandatory: true
+      #采用手动应答
+    listener:
+      simple:
+        acknowledge-mode: manual
 
   redis:
     host: 114.132.201.144
@@ -71,3 +80,6 @@ minio:
   accessKey: ENC(RCyQi4wvDM975k52j43dKTfaIXVDT2qQ)
   secretKey: ENC(RCyQi4wvDM975k52j43dKTfaIXVDT2qQ)
 
+vpn:
+  order:
+    timeout: 3

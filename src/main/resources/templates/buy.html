@@ -251,12 +251,8 @@
             data:JSON.stringify({'comboId':id, 'comboName': name, 'price': value, 'type': type}),
             success:function(res) {
                 let data = res.data;
-                let comboName = data.comboName;
-                let comboType = data.comboType;
                 let orderId = data.orderId;
-                let price = data.orderPrice;
-                let time = data.createTime;
-                window.location.href = "/creatOrder?comboName=" + comboName + "&comboType=" + comboType + "&orderId=" + orderId + "&time=" + time + "&price=" + price;
+                window.location.href = "/creatOrder?orderId=" + orderId;
             }
         })
     }

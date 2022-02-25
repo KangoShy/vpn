@@ -8,10 +8,13 @@ import java.util.stream.Stream;
 @Getter
 public enum OrderStatusEnum {
 
+
+    //0、等待付款中 1、已付款 2、已超时 3、已付款待发货 4、已发货
     PAY_NO("0", "待付款"),
     PAY_YES("1", "已付款"),
     PAY_TIMEOUT("2", "已超时"),
-    PAY_OUT("3", "已关闭")
+    PAY_OUT("3", "已付款待发货"),
+    PAY_SUCCESS("4", "已发货")
     ;
 
     private final String code;

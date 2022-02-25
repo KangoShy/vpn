@@ -1,7 +1,7 @@
 package com.dachui.vpn.repository;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.dachui.vpn.model.po.UcenterMember;
+import com.dachui.vpn.model.po.UserCenterPO;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -10,6 +10,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @Description:
  */
 @Mapper
-public interface UcenterMemberMapper extends BaseMapper<UcenterMember> {
+public interface UserCenterMapper extends BaseMapper<UserCenterPO> {
 
 }

@@ -146,8 +146,7 @@
 <main>
     <article>
         <div style="text-align: center" id="appendOrderStatus">
-            <div style="font-size: 30px" id="div0"></div>
-            <h4>支付完成后，掌柜将快速为您处理订单</h4>
+            <div style="font-size: 25px" id="div0"></div>
         </div>
     </article>
 </main>
@@ -194,7 +193,6 @@
 <script src="../static/js/demo-only.js"></script>
 <script>
     $(document).ready(function () {
-        init();
         $(".menu-container").jSideMenu({
             jSidePosition: "position-left", //possible options position-left or position-right
 
@@ -205,16 +203,10 @@
     });
 
     window.onload=function(){
-        a();
+        getOrderStatus();
     };
 
-    let ddsx = false;
-    //订单状态
-    function a() {
-        setInterval(function() {
-            if (ddsx) return;
-            getOrderStatus();}, 1000);
-    }
+    let interval = null;
 
     function getOrderStatus() {
         $.ajax({
@@ -223,34 +215,31 @@
             data:{'orderId':'[[${orderId}]]'},
             success:function(res) {
                 let append;
-                let data = res.data.status;
-                let zcgb = res.data.zcgb;
-                if (zcgb) {
-                    append = "<h3>订单已关闭！</h3>";
-                    document.getElementById("fk").setAttribute("disabled",true);
-                    document.getElementById("fk").style.backgroundColor = '#8d9094';
-                    document.getElementById("closeOrderBtn").setAttribute("disabled", true);
-                    document.getElementById("closeOrderBtn").style.backgroundColor = '#8d9094';
-                    ddsx = true;
-                    $("#appendOrderStatus").html(append);
-                    return;
+                if (res.code === '9000') {
+                    append = "<h3>" + res.message + "</h3>";
+                }else{
+                    let status = res.data.status;
+                    if (status === '0') {
+                        getFailureTime();
+                        return;
+                    }
+                    if (status === '1') {
+                        append = "<h3>付款成功！</h3>";
+                    }
+                    if (status === '2') {
+                        append = "<h3>订单已超时！</h3>";
+                    }
+                    if (status === '3') {
+                        append = "<h3>准备发货中！</h3>";
+                    }
+                    if (status === '4') {
+                        append = "<h3>订单已完成！</h3>";
+                    }
                 }
-                if (data === '1') {
-                    append = "<h3>付款成功！</h3>";
-                    document.getElementById("fk").setAttribute("disabled",true);
-                    document.getElementById("fk").style.backgroundColor = '#8d9094';
-                    document.getElementById("closeOrderBtn").setAttribute("disabled", true);
-                    document.getElementById("closeOrderBtn").style.backgroundColor = '#8d9094';
-                    ddsx = true;
-                }
-                if (data === '2') {
-                    append = "<h3>已超时！</h3>";
-                    document.getElementById("fk").setAttribute("disabled",true);
-                    document.getElementById("fk").style.backgroundColor = '#8d9094';
-                    document.getElementById("closeOrderBtn").setAttribute("disabled", true);
-                    document.getElementById("closeOrderBtn").style.backgroundColor = '#8d9094';
-                    ddsx = true;
-                }
+                document.getElementById("fk").setAttribute("disabled",true);
+                document.getElementById("fk").style.backgroundColor = '#8d9094';
+                document.getElementById("closeOrderBtn").setAttribute("disabled", true);
+                document.getElementById("closeOrderBtn").style.backgroundColor = '#8d9094';
                 $("#appendOrderStatus").html(append);
             }
         })
@@ -261,7 +250,7 @@
     }
 
     function shutDownOrder(orderId, val) {
-        let msg = "重新发起不会保存当前订单，是否继续？";
+        let msg = "重新发起会关闭当前订单，是否继续？";
         let clost = "确认要关闭当前订单？";
         if (val === 2) {
             if (confirm(msg) === false) {
@@ -298,19 +287,7 @@
 
 </script>
 <script>
-    var preset,inputs;
-    function init(){
-
-        preset=new Date();
-        preset.setHours(preset.getHours()+ 0);
-        preset.setMinutes(preset.getMinutes()+ 2);
-        preset.setSeconds(preset.getSeconds()+ 59);
-        var div=document.getElementById("div0");
-        setInterval(animation,500,div);
-
-
-    }
-
+    var preset;
     function animation(elem){
         if(!preset) return;
         var date=new Date();
@@ -323,18 +300,60 @@
         var h = time >= 3600 ? parseInt(time/3600) : "00";
         var m = time>=60 ? parseInt((time - h * 3600)/60) : "00";
         var s = parseInt(time-h*3600-m*60);
-        h = (count(h+"") == 1) ? ("0" + h) : h;
-        m = (count(m+"") == 1) ? ("0" + m) : m;
-        s = (count(s+"") == 1) ? ("0" + s) : s;
+        h = (count(h+"") === 1) ? ("0" + h) : h;
+        m = (count(m+"") === 1) ? ("0" + m) : m;
+        s = (count(s+"") === 1) ? ("0" + s) : s;
 
         elem.innerHTML=h+":"+m+":"+s;
+        if (m === "00" && s === "00") {
+            setTimeout("getOrderStatus()", 1000)
+            clearInterval(interval);
+        }
+    }
+
+    function getFailureTime() {
+        $.ajax({
+            url:'/vpn/getFailureTime',
+            type: 'GET',
+            dataType:'json',
+            data:{'orderId': '[[${orderId}]]'},
+            success:function(res) {
+                if (res.code === '0000') {
+                    let failureTime = res.data;
+                    let date = new Date(failureTime);
+                    console.log("超时时间=" + date);
+                    let now = new Date();
+                    console.log("当前时间=" + now)
+                    let second = Math.trunc((date.getTime() - now.getTime())/1000);
+                    let minute = 0
+                    let hour = 0
+                    if (second > 60) {
+                        minute = parseInt(second / 60)
+                        second = parseInt(second % 60)
+                        if (minute > 60) {
+                            hour = parseInt(minute / 60)
+                            minute = parseInt(minute % 60)
+                        }
+                    }
+                    preset=new Date();
+                    preset.setHours(preset.getHours() + hour);
+                    preset.setMinutes(preset.getMinutes()+ minute);
+                    preset.setSeconds(preset.getSeconds() + second);
+                    let div=document.getElementById("div0");
+                    interval = setInterval(animation,1000,div);
+                }
+            },
+            error:function() {
+                console.log("获取超时时间失败！");
+            }
+        })
     }
 
     function count(o){
         var t = typeof o;
-        if(t == 'string'){
+        if(t === 'string'){
             return o.length;
-        }else if(t == 'object'){
+        }else if(t === 'object'){
             var n = 0;
             for(var i in o){
                 n++;

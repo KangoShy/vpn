@@ -1,4 +1,4 @@
-package com.dachui.vpn.LoginPackage.domain;
+package com.dachui.vpn.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

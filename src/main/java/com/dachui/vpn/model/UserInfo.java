@@ -16,16 +16,8 @@ public class UserInfo {
 
     private Long userId;
 
-    private String userName;
+    private String username;
 
-    private String userAccount;
-
-    private Date userBirthday;
-
-    private String userType;
-
-    private String userAge;
-
-    private String userHead;
+    private String password;
 
 }
